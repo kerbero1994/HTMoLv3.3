@@ -22,11 +22,13 @@ function R_Skele() {
         CambiarRepresentacion("Skeleton");
     }
 }
+///--------------Julio
 function R_Spline() {
     return function(event) {
         CambiarRepresentacion("Spline");
     }
 }
+///--------------
 
 
 function SetView(mol, name){
@@ -123,7 +125,7 @@ function CenterByAtom()
             var atom=AtomosSeleccionados[0];
             //center by atom.x y z
             //simplemete a cada átomo se le resta la x y z del átomo seleccionado
-            
+
 
 
         }
@@ -413,10 +415,12 @@ function CambiarRepresentacion(Repre) //Representacion es en lo que se va a camb
         {
             InitBufSkeleton();
         }
+        //-----Julio
         else if (Repre == 'Spline')
         {
             InitBufSpline();
         }
+        ///-------------------
 
 
 
@@ -863,7 +867,6 @@ function CambiarRepresentacion(Repre) //Representacion es en lo que se va a camb
                 {
                     ///////////parte de Julio para el Spline
 
-                    initBufferSpline();
                 }
 
             }
@@ -962,7 +965,6 @@ function CambiarRepresentacion(Repre) //Representacion es en lo que se va a camb
                     else //spline
                     {
                         //parte de Julio
-                        initBufferSpline();
                     }
 
                 }
@@ -971,8 +973,6 @@ function CambiarRepresentacion(Repre) //Representacion es en lo que se va a camb
 
             else /// el Spline parte de Julio
             {
-                atom.Representation=Repre;
-
 
             }
 
