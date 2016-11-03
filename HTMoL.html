@@ -3,11 +3,11 @@ http://www.opensource.org/licenses/mit-license.php
 
 this file is part of HTMoL:
 Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Vega Ramirez Adan -->
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html>
 <head>
     <title>HTMOL</title>
-    
+
 
     <script src="http://code.jquery.com/jquery-1.9.0.js"></script>
     <script src="js/TrackballControls.js"></script>
@@ -19,18 +19,20 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
     <script src='js/Menu.js'></script>
     <script src='js/config.js'></script>
     <script src='js/camera.js'></script>
-    <script src='js/InicializarRepre.js'></script>  
-    <script src='js/digitos.js'></script>    
+    <script src='js/InicializarRepre.js'></script>
+    <script src='js/digitos.js'></script>
 
-    <script src='js/Shaders.js'></script> 
+    <script src='js/Shaders.js'></script>
     <script src='js/plantilla_esfera.js'></script>
     <script src='js/Buffers.js'></script>
     <script src='js/Picking.js'></script>
     <script src="js/glMatrix.js"></script>
     <script src="js/utils.js"></script>
-    <script src="js/ButtonsFunctions.js"></script>  
+    <script src="js/ButtonsFunctions.js"></script>
 
-    <link rel='stylesheet' href='styles/sizeHTMol.css' media='screen'>  
+    <script src='js/SplineCatmullRom.js'></script><!--JULIO-->
+
+    <link rel='stylesheet' href='styles/sizeHTMol.css' media='screen'>
 
     <script id="shader-fs" type="x-shader/x-fragment">
     #ifdef GL_ES
@@ -46,18 +48,18 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
 
     uniform vec3 uPointLightingLocation;
     uniform vec3 uPointLightingColor;
-   
+
     varying vec4 vColor;
 
     void main(void) {
 
-        if (uOffscreen) 
+        if (uOffscreen)
         {
             gl_FragColor = vColor;
-        }   
+        }
         else
         {
-            if (vColor.a==0.0) 
+            if (vColor.a==0.0)
             {
                 gl_FragColor = vec4(1,1,1,0);
             }
@@ -72,7 +74,7 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
                 gl_FragColor = vec4(vColor.rgb * lightWeighting, vColor.a);
 
             }
-           
+
         }
     }
 </script>
@@ -97,10 +99,10 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
     varying vec3 vTransformedNormal;
     varying vec4 vPosition;
 
-    void main(void) 
+    void main(void)
     {
-   
-            if (uOffscreen) 
+
+            if (uOffscreen)
             {
                 vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
                 gl_Position = uPMatrix * vPosition;
@@ -108,17 +110,17 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
             }
             else
             {
-                if (aVertexColor.a==0.0) 
+                if (aVertexColor.a==0.0)
                 {
                     return;
                 }
                 else
-                {  
+                {
                     vPaint=true;
 
                     for(int i=0;i<12;i++) //si es un número mayor a 12 de cadenas hay que modificar esto, por eso esta parte se va a hacer por script
                     {
-                        if (uIntArray[i] == 0.0  ) 
+                        if (uIntArray[i] == 0.0  )
                         {
                             break;
                         }
@@ -128,7 +130,7 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
                             {
                                 vPaint=false;
                                 break;
-                            }                    
+                            }
                         }
                     }
 
@@ -136,16 +138,16 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
                     {
                         vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
                         gl_Position = uPMatrix * vPosition;
-                        vColor = aVertexColor;        
-                        vTransformedNormal = uNMatrix * aVertexNormal;  
-                    }   
+                        vColor = aVertexColor;
+                        vTransformedNormal = uNMatrix * aVertexNormal;
+                    }
                     else
                     {
                         return;
-                    }             
+                    }
                 }
 
-            }       
+            }
 
     }
 </script>
@@ -180,16 +182,16 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
     var haySeleccionado=false;
 
     var AtomosSeleccionados=[];
-    
+
     var indexAlmacenado=[];
-     
+
     var molecule;
 
     var nVertices= 867;
     //var nVertices= 48;
     var nColor= 1156;
     //var nColor= 64;
-    var nIndices= 1536; //se le suma 289 para hacer el offset 
+    var nIndices= 1536; //se le suma 289 para hacer el offset
     //var nIndices= 54;
     var nChain=578;
 
@@ -218,7 +220,7 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
 
 
     function initGL(canvas) {
-        try { 
+        try {
             gl = canvas.getContext("experimental-webgl")||canvas.getContext("webgl")||canvas.getContext("webkit-3d")||canvas.getContext("moz-webgl");
             gl.viewportWidth = canvas.width;
             gl.viewportHeight = canvas.height;
@@ -227,8 +229,8 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
         if (!gl) {
             alert("Su visualizador no tiene soporte para WebGL");
         }
-    }  
-    
+    }
+
 
     var mvMatrix = mat4.create();
     var mvMatrixStack = [];
@@ -269,7 +271,7 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
     var RotationMatrix = mat4.create();
     mat4.identity(RotationMatrix);
 
-    
+
     function GetAtom(pix)
     {
         var NumAtom = 0;
@@ -278,14 +280,14 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
         NumAtom= pix[2]*255*255 + pix[1]*255 + pix[0];
         try
         {
-            atmS= molecule.LstAtoms[NumAtom-1]; 
-            return atmS;              
+            atmS= molecule.LstAtoms[NumAtom-1];
+            return atmS;
         }
         catch(e)
         {
             return null;
         }
-                
+
     }
 
     var ArrayIndx=[]; //variable para las cadenas que se apagan y prenden
@@ -314,39 +316,49 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
     var ColorTotalDiffuse = [[]];
 
     ////////////////////////////////////////////// PARA LOS ENLACES /////////////////////////////////////////////7
-    var lineVertexPositionBuffer=[];    
+    var lineVertexPositionBuffer=[];
     var colorVertexBuffer= null; //es para el buffer de los enlaces
     var ColorDifBuffer = []; //buffer
     var lineNormalBuffer=[];
     var ChainBufferBnd=[]; //para el buffer del indice de la cadena
 
-    var verticesLineas = [];    
+    var verticesLineas = [];
     var colores=[];
-    var colorBndDif =[]; //para el color diffuso, este se pone en 0 
+    var colorBndDif =[]; //para el color diffuso, este se pone en 0
     var linesNormals=[]; //para el arreglo de js de las normales
-    var ChainIndexBnd=[]; //para el arreglo en javascript del indice de la cadena    
+    var ChainIndexBnd=[]; //para el arreglo en javascript del indice de la cadena
     /////////////////////////////////////////////////////////////////////////////////
 
     //////////////////////////////////////// PARA LOS ENLACES SKELETON/////////////////////////////////////////////7
-    var lineSkeleVerPosBuf=[];    
+    var lineSkeleVerPosBuf=[];
     var colSkeleVerBuf= null; //es para el buffer de los enlaces
     var ColSkeleDifBuf = []; //buffer
     var lineSkeleNorBuf=[];
     var ChainSkeleBufBnd=[]; //para el buffer del indice de la cadena
 
-    var verLineSkele = [];    
+    var verLineSkele = [];
     var coloresSkele=[];
-    var colorSkeleBndDif =[]; //para el color diffuso, este se pone en 0 
+    var colorSkeleBndDif =[]; //para el color diffuso, este se pone en 0
     var lineSkeleNor=[]; //para el arreglo de js de las normales
-    var ChainSkeleIndexBnd=[]; //para el arreglo en javascript del indice de la cadena    
+    var ChainSkeleIndexBnd=[]; //para el arreglo en javascript del indice de la cadena
+
+    //------Julio
+    var verLineSpl = [];
+    var coloresSpl=[];
+    var colorSplBndDif =[]; //para el color diffuso, este se pone en 0
+    var lineSplNor=[]; //para el arreglo de js de las normales
+    var ChainSplIndexBnd=[]; //para el arreglo en javascript del indice de la cadena
+    var OptRep=false;//Para que no haga spline si es que no se llama
+    //-------------
+
     /////////////////////////////////////////////////////////////////////////////////
 
     var latitudeBands = 16;
-    var longitudeBands =  16;    
+    var longitudeBands =  16;
 
     var NBSphe=0;
-    var LstBSphe=[];    
-        
+    var LstBSphe=[];
+
 
     var RegFrame=false;
 
@@ -355,22 +367,22 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
     var DistanceBool = false; //se activa para en el picking mostrar la distancia de los átomos
     var AngleBool = false;
 
-    function drawScene(diffuse) 
+    function drawScene(diffuse)
     {
-       
+
 
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
         mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, pMatrix);
-       
+
         currentProgram = perFragmentProgram;
         gl.useProgram(currentProgram);
 
-        gl.uniform1i(currentProgram.useLightingUniform, 1);        
+        gl.uniform1i(currentProgram.useLightingUniform, 1);
         gl.uniform3f(currentProgram.ambientColorUniform,0.2,0.2,0.2);
         gl.uniform3f(currentProgram.pointLightingLocationUniform,0.0,0.0,0.0);
-        gl.uniform3f(currentProgram.pointLightingColorUniform,0.8,0.8,0.8);       
+        gl.uniform3f(currentProgram.pointLightingColorUniform,0.8,0.8,0.8);
 
         mat4.identity(mvMatrix);
 
@@ -386,7 +398,7 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
 
          //console.log("pMatrix:["+pMatrix[0]+"]["+pMatrix[1]+"]["+pMatrix[2]+"]["+pMatrix[3]+"]  ["+pMatrix[4]+"]["+pMatrix[5]+"]["+pMatrix[6]+"]["+pMatrix[7]+"]  ["+pMatrix[8]+"]["+pMatrix[9]+"]["+pMatrix[10]+"]["+pMatrix[11]+"]  ["+pMatrix[12]+"]["+pMatrix[13]+"]["+pMatrix[14]+"]["+pMatrix[15]+"]");
 
-        if(trjbnd && autoplay) //trjbnd y autoplay están declaradas en el Main   
+        if(trjbnd && autoplay) //trjbnd y autoplay están declaradas en el Main
         {
             var x1=0;
             var y1=0;
@@ -408,7 +420,7 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
             Cx=x1/molecule.LstAtoms.length;
             Cy=y1/molecule.LstAtoms.length;
             Cz=z1/molecule.LstAtoms.length;
-             
+
             if((pos*molecule.LstAtoms.length)==coordsX.length && bndbuffer==0)
             {
                 bndbuffer=1;
@@ -420,73 +432,73 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
                 pos=0;
             }
             //alert(molecule.LstAtoms.length);
-            if (NoBloques==1) 
+            if (NoBloques==1)
             {
 
                 //para limpiarlos
                 vertexPositionData[0]=[];
 
                 for(var i=0; i<NoAtomos; i++)
-                {       
+                {
 
                     //la molecula tiene la lista de átomos en orden, entonces lo recorro con los i
                     var atom = molecule.LstAtoms[i];
-                    
+
                     //lo unico que va a cambiar es el buffer de posiciones VertexPosition
                     //alert(coordsX[molecule.LstAtoms.length*pos+i]);
                     var s=molecule.LstAtoms.length*pos+i;
 
                     if(bndbuffer==0)
-                    { 
+                    {
 
-                        if (atom.Representation=='SB') 
+                        if (atom.Representation=='SB')
                         {
-                            ////////////si el átomo está en SB                
-                            for (var z=0; z<verArray.length;) 
-                            {    
+                            ////////////si el átomo está en SB
+                            for (var z=0; z<verArray.length;)
+                            {
                             vertexPositionData[0].push(verArray[z]   + coordsX[s] -Cx);
                             vertexPositionData[0].push(verArray[z+1] + coordsY[s] -Cy);
                             vertexPositionData[0].push(verArray[z+2] + coordsZ[s] -Cz);
 
-                                           
+
                             z=z+3;
-                            }   
+                            }
 
                         }
                         else if (atom.Representation=='CPK')
                         {
-                            ////////////si el átomo está en cpk                
-                            for (var z=0; z<verArray.length;) 
-                            {    
+                            ////////////si el átomo está en cpk
+                            for (var z=0; z<verArray.length;)
+                            {
                             vertexPositionData[0].push(verArrayH[z]   + coordsX[s] -Cx);
                             vertexPositionData[0].push(verArrayH[z+1] + coordsY[s] -Cy);
-                            vertexPositionData[0].push(verArrayH[z+2] + coordsZ[s] -Cz);    
-                                           
+                            vertexPositionData[0].push(verArrayH[z+2] + coordsZ[s] -Cz);
+
                             z=z+3;
-                            }  
+                            }
                         }
                         else
                         {
 
 
                         }
-                        
-                        //alert("vertex"+vertexPositionData[atom.BloqueSolid-1].length);      
-                   
+
+                        //alert("vertex"+vertexPositionData[atom.BloqueSolid-1].length);
+
                     }
                     else
                     {
-                        for (var z=0; z<verArray.length;) 
-                        {    
+                        for (var z=0; z<verArray.length;)
+                        {
                         vertexPositionData[0].push(verArray[z]   + coordsX1[s] -Cx);
                         vertexPositionData[0].push(verArray[z+1] + coordsY1[s] -Cy);
-                        vertexPositionData[0].push(verArray[z+2] + coordsZ1[s] -Cz);  
-                                       
+                        vertexPositionData[0].push(verArray[z+2] + coordsZ1[s] -Cz);
+
                         z=z+3;
-                        }      
-                           
-                    }          
-           
+                        }
+
+                    }
+
                     apuntador=apuntador+1;
 
                 //-----------------------------------------------------------------------------------------------------
@@ -503,8 +515,8 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
             else
             {
                 for(var i=0; i<NoBloques; i++)
-                {           
-                  
+                {
+
                     vertexPositionData[i]=[];
 
                     if (i==NoBloques-1) //esto es que llegó al último
@@ -514,130 +526,130 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
 
                            //la molecula tiene la lista de átomos en orden, entonces lo recorro con los i
                             var atom = molecule.LstAtoms[apuntador];
-                            
+
                             //lo unico que va a cambiar es el buffer de posiciones VertexPosition
                             //alert(coordsX[molecule.LstAtoms.length*pos+i]);
                             var s=molecule.LstAtoms.length*pos+apuntador;
 
                             if(bndbuffer==0)
-                            {                   
-                                if (atom.Representation=='SB') 
+                            {
+                                if (atom.Representation=='SB')
                                 {
-                                    ////////////si el átomo está en SB                
-                                    for (var z=0; z<verArray.length;) 
-                                    {    
+                                    ////////////si el átomo está en SB
+                                    for (var z=0; z<verArray.length;)
+                                    {
                                     vertexPositionData[i].push(verArray[z]   + coordsX[s] -Cx);
                                     vertexPositionData[i].push(verArray[z+1] + coordsY[s] -Cy);
-                                    vertexPositionData[i].push(verArray[z+2] + coordsZ[s] -Cz);    
-                                                   
+                                    vertexPositionData[i].push(verArray[z+2] + coordsZ[s] -Cz);
+
                                     z=z+3;
-                                    }   
+                                    }
 
                                 }
                                 else if (atom.Representation=='CPK')
                                 {
-                                    ////////////si el átomo está en cpk                
-                                    for (var z=0; z<verArray.length;) 
-                                    {    
+                                    ////////////si el átomo está en cpk
+                                    for (var z=0; z<verArray.length;)
+                                    {
                                     vertexPositionData[i].push(verArrayH[z]   + coordsX[s] -Cx);
                                     vertexPositionData[i].push(verArrayH[z+1] + coordsY[s] -Cy);
-                                    vertexPositionData[i].push(verArrayH[z+2] + coordsZ[s] -Cz);    
-                                                   
+                                    vertexPositionData[i].push(verArrayH[z+2] + coordsZ[s] -Cz);
+
                                     z=z+3;
-                                    }  
-                                     
+                                    }
+
                                 }
                                 else
                                 {
-                                    
+
 
                                 }
-                           
+
                             }
                             else
                             {
                                 alert("coordsX1");
-                                for (var z=0; z<verArray.length;) 
-                                {    
+                                for (var z=0; z<verArray.length;)
+                                {
                                 vertexPositionData[i].push(verArray[z]   + coordsX1[s] -Cx);
                                 vertexPositionData[i].push(verArray[z+1] + coordsY1[s] -Cy);
-                                vertexPositionData[i].push(verArray[z+2] + coordsZ1[s] -Cz);  
-                                               
+                                vertexPositionData[i].push(verArray[z+2] + coordsZ1[s] -Cz);
+
                                 z=z+3;
-                                }      
-                                   
-                            }          
-                               
+                                }
+
+                            }
+
                                 apuntador=apuntador+1;
 
                                 //---------------------------------------------------------------------------------------------------------
-                            }                         
-                         
+                            }
+
                     }
                     else
                     {
-                        for (var j=0; j <NoPaso; j++) 
-                        {                  
+                        for (var j=0; j <NoPaso; j++)
+                        {
                             //la molecula tiene la lista de átomos en orden, entonces lo recorro con los i
                             var atom = molecule.LstAtoms[apuntador];
-                            
+
                             //lo unico que va a cambiar es el buffer de posiciones VertexPosition
                             //alert(coordsX[molecule.LstAtoms.length*pos+i]);
                             var s=molecule.LstAtoms.length*pos+apuntador;
 
                             if(bndbuffer==0)
-                            {                   
-                                if (atom.Representation=='SB') 
+                            {
+                                if (atom.Representation=='SB')
                                 {
-                                    ////////////si el átomo está en SB  
-                                    //console.log(Cx + ' ' + Cy + ' ' + Cz);               
-                                    for (var z=0; z<verArray.length;) 
-                                    {    
+                                    ////////////si el átomo está en SB
+                                    //console.log(Cx + ' ' + Cy + ' ' + Cz);
+                                    for (var z=0; z<verArray.length;)
+                                    {
                                     vertexPositionData[i].push(verArray[z]   + coordsX[s] -Cx);
                                     vertexPositionData[i].push(verArray[z+1] + coordsY[s] -Cy);
-                                    vertexPositionData[i].push(verArray[z+2] + coordsZ[s] -Cz);    
-                                                   
+                                    vertexPositionData[i].push(verArray[z+2] + coordsZ[s] -Cz);
+
                                     z=z+3;
-                                    }   
+                                    }
 
                                 }
                                 else if (atom.Representation=='CPK')
                                 {
-                                    ////////////si el átomo está en cpk                
-                                    for (var z=0; z<verArray.length;) 
-                                    {    
+                                    ////////////si el átomo está en cpk
+                                    for (var z=0; z<verArray.length;)
+                                    {
                                     vertexPositionData[i].push(verArrayH[z]   + coordsX[s] -Cx);
                                     vertexPositionData[i].push(verArrayH[z+1] + coordsY[s] -Cy);
-                                    vertexPositionData[i].push(verArrayH[z+2] + coordsZ[s] -Cz);    
-                                                   
+                                    vertexPositionData[i].push(verArrayH[z+2] + coordsZ[s] -Cz);
+
                                     z=z+3;
-                                    }  
-                                     
+                                    }
+
                                 }
                                 else
                                 {
 
-                                    
+
                                 }
-                   
+
                             }
                             else
                             {
-                                for (var z=0; z<verArray.length;) 
-                                {    
+                                for (var z=0; z<verArray.length;)
+                                {
                                     vertexPositionData[i].push(verArray[z]   + coordsX1[s] -Cx);
                                     vertexPositionData[i].push(verArray[z+1] + coordsY1[s] -Cy);
-                                    vertexPositionData[i].push(verArray[z+2] + coordsZ1[s] -Cz);  
-                                                   
+                                    vertexPositionData[i].push(verArray[z+2] + coordsZ1[s] -Cz);
+
                                     z=z+3;
-                                }      
-                           
-                            }          
+                                }
+
+                            }
                             apuntador=apuntador+1;
 
                         //---------------------------------------------------------------------------------------------------
                         }
-                    
+
                     }
                 }
 
@@ -661,9 +673,9 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
             verticesLineas = [];
             for (var i=0; i<molecule.LstBonds.length;i++)
             {
-                var atm1 = molecule.LstBonds[i].LstAtoms[0]; 
+                var atm1 = molecule.LstBonds[i].LstAtoms[0];
                 var atm2 = molecule.LstBonds[i].LstAtoms[1];
-               
+
                 var temp1 = molecule.LstAtoms.length*pos;
                 var temp2 = molecule.LstAtoms.length*pos;
 
@@ -671,10 +683,10 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
                 //alert("Atm1:"+temp1 + atm1.NumberAtom);
                 //alert("Atm2:"+temp2 + atm2.NumberAtom);
 
-                if ( temp1 <= coordsX.length )  //ESTÁ DENTRO DEL BUFFER1       
+                if ( temp1 <= coordsX.length )  //ESTÁ DENTRO DEL BUFFER1
                 {
                     //alert(temp1);
-                    //alert(atm1.NumberAtom);                                                       
+                    //alert(atm1.NumberAtom);
                     //alert(parseInt(temp1) + parseInt(atm1.NumberAtom));
                     //alert(coordsX[parseInt(temp1) + parseInt(atm1.NumberAtom)]);
                     verticesLineas.push(coordsX[parseInt(temp1) + parseInt(atm1.id) -1] -Cx); /////////////////////////////77
@@ -713,9 +725,9 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
             verLineSkele = [];
             for (var i=0; i<molecule.LstBondsSkeleton.length;i++)
             {
-                var atm1 = molecule.LstBondsSkeleton[i].LstAtoms[0]; 
+                var atm1 = molecule.LstBondsSkeleton[i].LstAtoms[0];
                 var atm2 = molecule.LstBondsSkeleton[i].LstAtoms[1];
-               
+
                 var temp1 = molecule.LstAtoms.length*pos;
                 var temp2 = molecule.LstAtoms.length*pos;
 
@@ -723,10 +735,10 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
                 //alert("Atm1:"+temp1 + atm1.NumberAtom);
                 //alert("Atm2:"+temp2 + atm2.NumberAtom);
 
-                if ( temp1 <= coordsX.length )  //ESTÁ DENTRO DEL BUFFER1       
+                if ( temp1 <= coordsX.length )  //ESTÁ DENTRO DEL BUFFER1
                 {
                     //alert(temp1);
-                    //alert(atm1.NumberAtom);                                                       
+                    //alert(atm1.NumberAtom);
                     //alert(parseInt(temp1) + parseInt(atm1.NumberAtom));
                     //alert(coordsX[parseInt(temp1) + parseInt(atm1.NumberAtom)]);
                     verLineSkele.push(coordsX[parseInt(temp1) + parseInt(atm1.id) -1] -Cx); /////////////////////////////77
@@ -760,20 +772,23 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
             lineSkeleVerPosBuf.numItems = verLineSkele.length/3;
             gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
+            if(OptRep==true)//---------Julio
+            {
+              cleanMemory();
+              initBufferSpline();
+            }
+            //-----------------------
 
-           
-
-         
             framecounter(numframe+1);
 
             if(numframe<parseInt(totalframes)-1)
             {
-                if (RegFrame==false) 
+                if (RegFrame==false)
                 {
                     numframe++;
                     pos++;
                 }
-                
+
             }
             else
             {
@@ -788,10 +803,10 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
                 pos=0;
                 console.log("segunda parte sale");
             }
-       
- 
-            for(var i=0; i<NBSphe; i++) 
-            {              
+
+
+            for(var i=0; i<NBSphe; i++)
+            {
                     gl.bindBuffer(gl.ARRAY_BUFFER, sphereVertexPositionBuffer[i]);
                     gl.vertexAttribPointer(currentProgram.vertexPositionAttribute, sphereVertexPositionBuffer[i].itemSize, gl.FLOAT, false, 0, 0);
                     gl.bindBuffer(gl.ARRAY_BUFFER, null);
@@ -807,18 +822,18 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
                     gl.bindBuffer(gl.ARRAY_BUFFER, ChainBuffer[i]);
                     gl.vertexAttribPointer(currentProgram.Opcion, ChainBuffer[i].itemSize, gl.FLOAT, false, 0, 0);
                     gl.bindBuffer(gl.ARRAY_BUFFER, null);
-                    
-                   
+
+
                     gl.bindBuffer(gl.ARRAY_BUFFER, sphereVertexNormalBuffer[i]);
                     gl.vertexAttribPointer(currentProgram.vertexNormalAttribute, sphereVertexNormalBuffer[i].itemSize, gl.FLOAT, false, 0, 0);
                     gl.bindBuffer(gl.ARRAY_BUFFER, null);
                     setMatrixUniforms();
 
-                    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, sphereVertexIndexBuffer[i]);                    
+                    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, sphereVertexIndexBuffer[i]);
                     gl.drawElements(gl.TRIANGLES, sphereVertexIndexBuffer[i].numItems, gl.UNSIGNED_SHORT, 0);
-                    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null); 
-                    
-                   
+                    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+
+
             }
 
             //////PARTE DE LOS ENLACES
@@ -839,9 +854,9 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
             gl.vertexAttribPointer(currentProgram.Opcion, ChainBufferBnd.itemSize, gl.FLOAT, false, 0, 0);
             gl.bindBuffer(gl.ARRAY_BUFFER, null);
             setMatrixUniforms();
-                    
+
             gl.bindBuffer(gl.ARRAY_BUFFER, lineVertexPositionBuffer);
-            gl.vertexAttribPointer(currentProgram.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);            
+            gl.vertexAttribPointer(currentProgram.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
             gl.drawArrays(gl.LINES, 0, lineVertexPositionBuffer.numItems);
             gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
@@ -853,7 +868,7 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
                     gl.bindBuffer(gl.ARRAY_BUFFER, ColSkeleDifBuf);
                     gl.vertexAttribPointer(currentProgram.ColorDif, ColSkeleDifBuf.itemSize, gl.FLOAT, false, 0, 0);
                     gl.bindBuffer(gl.ARRAY_BUFFER, null);
-                    
+
                     gl.bindBuffer(gl.ARRAY_BUFFER, ChainSkeleBufBnd);
                     gl.vertexAttribPointer(currentProgram.Opcion, ChainSkeleBufBnd.itemSize, gl.FLOAT, false, 0, 0);
                     gl.bindBuffer(gl.ARRAY_BUFFER, null);
@@ -862,23 +877,24 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
                     gl.vertexAttribPointer(currentProgram.vertexNormalAttribute, 3, gl.FLOAT, false, 0, 0);
                     gl.bindBuffer(gl.ARRAY_BUFFER, null);
                     setMatrixUniforms();
-                    
+
                     gl.bindBuffer(gl.ARRAY_BUFFER, lineSkeleVerPosBuf);
-                    gl.vertexAttribPointer(currentProgram.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);                   
+                    gl.vertexAttribPointer(currentProgram.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
                     gl.drawArrays(gl.LINES, 0, lineSkeleVerPosBuf.numItems);
                     gl.bindBuffer(gl.ARRAY_BUFFER, null);
-                    
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-               
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                if(OptRep==true)//---------Julio
+                  DrawSpline();
+                //--------------------
 
         }
 
         else       ///////////////////////////////////////////////////////------sin dinámica------------------------///////////////////////////////////////
         {
-            
+
                 for(var i=0; i<NBSphe; i++) //colores reales
-                {              
+                {
                     gl.bindBuffer(gl.ARRAY_BUFFER, sphereVertexPositionBuffer[i]);
                     gl.vertexAttribPointer(currentProgram.vertexPositionAttribute, sphereVertexPositionBuffer[i].itemSize, gl.FLOAT, false, 0, 0);
                     gl.bindBuffer(gl.ARRAY_BUFFER, null);
@@ -894,19 +910,19 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
                     gl.bindBuffer(gl.ARRAY_BUFFER, ChainBuffer[i]);
                     gl.vertexAttribPointer(currentProgram.Opcion, ChainBuffer[i].itemSize, gl.FLOAT, false, 0, 0);
                     gl.bindBuffer(gl.ARRAY_BUFFER, null);
-                   
+
                     gl.bindBuffer(gl.ARRAY_BUFFER, sphereVertexNormalBuffer[i]);
                     gl.vertexAttribPointer(currentProgram.vertexNormalAttribute, sphereVertexNormalBuffer[i].itemSize, gl.FLOAT, false, 0, 0);
                     gl.bindBuffer(gl.ARRAY_BUFFER, null);
                     setMatrixUniforms();
 
-                    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, sphereVertexIndexBuffer[i]);                    
+                    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, sphereVertexIndexBuffer[i]);
                     gl.drawElements(gl.TRIANGLES, sphereVertexIndexBuffer[i].numItems, gl.UNSIGNED_SHORT, 0);
                     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
-                    
-                   
+
+
                 }
-                
+
 
                  //////////////////////////////////////////////////////////////////lineas
                     gl.bindBuffer(gl.ARRAY_BUFFER, colorVertexBuffer);
@@ -916,7 +932,7 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
                     gl.bindBuffer(gl.ARRAY_BUFFER, ColorDifBuffer);
                     gl.vertexAttribPointer(currentProgram.ColorDif, ColorDifBuffer.itemSize, gl.FLOAT, false, 0, 0);
                     gl.bindBuffer(gl.ARRAY_BUFFER, null);
-                    
+
                     gl.bindBuffer(gl.ARRAY_BUFFER, ChainBufferBnd);
                     gl.vertexAttribPointer(currentProgram.Opcion, ChainBufferBnd.itemSize, gl.FLOAT, false, 0, 0);
                     gl.bindBuffer(gl.ARRAY_BUFFER, null);
@@ -925,12 +941,12 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
                     gl.vertexAttribPointer(currentProgram.vertexNormalAttribute, 3, gl.FLOAT, false, 0, 0);
                     gl.bindBuffer(gl.ARRAY_BUFFER, null);
                     setMatrixUniforms();
-                    
+
                     gl.bindBuffer(gl.ARRAY_BUFFER, lineVertexPositionBuffer);
-                    gl.vertexAttribPointer(currentProgram.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);                   
+                    gl.vertexAttribPointer(currentProgram.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
                     gl.drawArrays(gl.LINES, 0, lineVertexPositionBuffer.numItems);
                     gl.bindBuffer(gl.ARRAY_BUFFER, null);
-                    
+
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
                 //////////////////////////////////////////////////////////////////lineas Skeletons
@@ -941,7 +957,7 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
                     gl.bindBuffer(gl.ARRAY_BUFFER, ColSkeleDifBuf);
                     gl.vertexAttribPointer(currentProgram.ColorDif, ColSkeleDifBuf.itemSize, gl.FLOAT, false, 0, 0);
                     gl.bindBuffer(gl.ARRAY_BUFFER, null);
-                    
+
                     gl.bindBuffer(gl.ARRAY_BUFFER, ChainSkeleBufBnd);
                     gl.vertexAttribPointer(currentProgram.Opcion, ChainSkeleBufBnd.itemSize, gl.FLOAT, false, 0, 0);
                     gl.bindBuffer(gl.ARRAY_BUFFER, null);
@@ -950,12 +966,12 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
                     gl.vertexAttribPointer(currentProgram.vertexNormalAttribute, 3, gl.FLOAT, false, 0, 0);
                     gl.bindBuffer(gl.ARRAY_BUFFER, null);
                     setMatrixUniforms();
-                    
+
                     gl.bindBuffer(gl.ARRAY_BUFFER, lineSkeleVerPosBuf);
-                    gl.vertexAttribPointer(currentProgram.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);                   
+                    gl.vertexAttribPointer(currentProgram.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
                     gl.drawArrays(gl.LINES, 0, lineSkeleVerPosBuf.numItems);
                     gl.bindBuffer(gl.ARRAY_BUFFER, null);
-                    
+
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 ///////////////////////////// PARTE DE LOS DÍGITOS ////////////////////////////////////////////////7
                     gl.bindBuffer(gl.ARRAY_BUFFER, diPosBuffer);
@@ -973,23 +989,52 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
                     gl.bindBuffer(gl.ARRAY_BUFFER, chaIndexBuffer);
                     gl.vertexAttribPointer(currentProgram.Opcion, chaIndexBuffer.itemSize, gl.FLOAT, false, 0, 0);
                     gl.bindBuffer(gl.ARRAY_BUFFER, null);
-                   
+
                     gl.bindBuffer(gl.ARRAY_BUFFER, diNorBuffer);
                     gl.vertexAttribPointer(currentProgram.vertexNormalAttribute, diNorBuffer.itemSize, gl.FLOAT, false, 0, 0);
                     gl.bindBuffer(gl.ARRAY_BUFFER, null);
                     setMatrixUniforms();
 
-                    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, diIndexBuffer);                    
+                    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, diIndexBuffer);
                     gl.drawElements(gl.TRIANGLES, diIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
                     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
-        
+                    if (OptRep==true)///----Julio
+                      DrawSpline();
         }
 
     }
+    //////////////////////////////////////////////////////////////////lineas SPLINE ----Julio
+
+    function DrawSpline (){
+            gl.bindBuffer(gl.ARRAY_BUFFER, colSplVerBuf);
+            gl.vertexAttribPointer(currentProgram.textureCoordAttribute, colSplVerBuf.itemSize, gl.FLOAT, false, 0, 0);
+            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, ColSplDifBuf);
+            gl.vertexAttribPointer(currentProgram.ColorDif, ColSplDifBuf.itemSize, gl.FLOAT, false, 0, 0);
+            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, ChainSplBufBnd);
+            gl.vertexAttribPointer(currentProgram.Opcion, ChainSplBufBnd.itemSize, gl.FLOAT, false, 0, 0);
+            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, lineSplNorBuf);
+            gl.vertexAttribPointer(currentProgram.vertexNormalAttribute, 3, gl.FLOAT, false, 0, 0);
+            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+            setMatrixUniforms();
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, lineSplVerPosBuf);
+            gl.vertexAttribPointer(currentProgram.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
+            gl.drawArrays(gl.LINES, 0, lineSplVerPosBuf.numItems);
+            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+          }
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////
+
 
      function framecounter(frame)
-            {        
+            {
                 if(bndknowframe==true)
                 {
                     totalframes=sizeglob/molecule.LstAtoms.length;
@@ -999,16 +1044,16 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
                 {
                     totalframes=sizeglob/molecule.LstAtoms.length;
                     data.innerHTML="frame " + (frame) + " of " + parseInt(totalframes);
-                }        
+                }
             }
 
 
     function tick() {
         requestAnimFrame(tick);
-     
+
             drawScene(0);
 
-        
+
     }
 
 
@@ -1037,13 +1082,13 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
             var reg=document.getElementById("Rew");
             var forw=document.getElementById("Forw");
             //alert("autoplay:"+autoplay + " trjbnd:"+trjbnd);
-           
+
 
             if(!autoplay)
             {
                 //alert(trjbnd);
                 autoplay=true;
-                button.value="Pause"; 
+                button.value="Pause";
                 reg.style.display="none";
                 RegFrame=false;
 
@@ -1051,13 +1096,13 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
             else
             {
                 trjbnd = !trjbnd;
-                
-                if (trjbnd) 
+
+                if (trjbnd)
                 {
                     //alert("Pause");
-                    button.value="Pause";    
-                    reg.style.display="none"; 
-                    forw.style.display="none";    
+                    button.value="Pause";
+                    reg.style.display="none";
+                    forw.style.display="none";
                     RegFrame=false;
 
                 }
@@ -1078,9 +1123,9 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
     {
         return function (event)
         {
-            if (op==1) 
+            if (op==1)
             {
-                if (pos>0) 
+                if (pos>0)
                 {
                     pos--;
                     numframe--;
@@ -1095,7 +1140,7 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
                     numframe++;
                 }
             }
-            
+
             var apuntador=0;
             var NoAtomos = molecule.LstAtoms.length;
             var Restantes = NoAtomos - ((NoBloques-1) * NoPaso);
@@ -1111,71 +1156,71 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
                 pos=0;
             }
             //alert(molecule.LstAtoms.length);
-            if (NoBloques==1) 
+            if (NoBloques==1)
             {
 
                 //para limpiarlos
                 vertexPositionData[0]=[];
 
                 for(var i=0; i<NoAtomos; i++)
-                {       
+                {
 
                     //la molecula tiene la lista de átomos en orden, entonces lo recorro con los i
                     var atom = molecule.LstAtoms[i];
-                    
+
                     //lo unico que va a cambiar es el buffer de posiciones VertexPosition
                     //alert(coordsX[molecule.LstAtoms.length*pos+i]);
                     var s=molecule.LstAtoms.length*pos+i;
 
                     if(bndbuffer==0)
-                    {   
-                        if (atom.Representation=='SB') 
+                    {
+                        if (atom.Representation=='SB')
                         {
-                            ////////////si el átomo está en SB                
-                            for (var z=0; z<verArray.length;) 
-                            {    
+                            ////////////si el átomo está en SB
+                            for (var z=0; z<verArray.length;)
+                            {
                             vertexPositionData[0].push(verArray[z]   + coordsX[s] -Cx);
                             vertexPositionData[0].push(verArray[z+1] + coordsY[s] -Cy);
-                            vertexPositionData[0].push(verArray[z+2] + coordsZ[s] -Cz);    
-                                           
+                            vertexPositionData[0].push(verArray[z+2] + coordsZ[s] -Cz);
+
                             z=z+3;
-                            }   
+                            }
 
                         }
                         else if (atom.Representation=='CPK')
                         {
-                            ////////////si el átomo está en cpk                
-                            for (var z=0; z<verArray.length;) 
-                            {    
+                            ////////////si el átomo está en cpk
+                            for (var z=0; z<verArray.length;)
+                            {
                             vertexPositionData[0].push(verArrayH[z]   + coordsX[s] -Cx);
                             vertexPositionData[0].push(verArrayH[z+1] + coordsY[s] -Cy);
-                            vertexPositionData[0].push(verArrayH[z+2] + coordsZ[s] -Cz);    
-                                           
+                            vertexPositionData[0].push(verArrayH[z+2] + coordsZ[s] -Cz);
+
                             z=z+3;
-                            }  
+                            }
                         }
                         else
                         {
 
 
                         }
-                        
-                        //alert("vertex"+vertexPositionData[atom.BloqueSolid-1].length);      
-                   
+
+                        //alert("vertex"+vertexPositionData[atom.BloqueSolid-1].length);
+
                     }
                     else
                     {
-                        for (var z=0; z<verArray.length;) 
-                        {    
+                        for (var z=0; z<verArray.length;)
+                        {
                         vertexPositionData[0].push(verArray[z]   + coordsX1[s] -Cx);
                         vertexPositionData[0].push(verArray[z+1] + coordsY1[s] -Cy);
-                        vertexPositionData[0].push(verArray[z+2] + coordsZ1[s] -Cz);  
-                                       
+                        vertexPositionData[0].push(verArray[z+2] + coordsZ1[s] -Cz);
+
                         z=z+3;
-                        }      
-                           
-                    }          
-           
+                        }
+
+                    }
+
                     apuntador=apuntador+1;
 
                 //-----------------------------------------------------------------------------------------------------
@@ -1192,8 +1237,8 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
             else
             {
                 for(var i=0; i<NoBloques; i++)
-                {           
-                  
+                {
+
                     vertexPositionData[i]=[];
 
                     if (i==NoBloques-1) //esto es que llegó al último
@@ -1203,130 +1248,130 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
 
                            //la molecula tiene la lista de átomos en orden, entonces lo recorro con los i
                             var atom = molecule.LstAtoms[apuntador];
-                            
+
                             //lo unico que va a cambiar es el buffer de posiciones VertexPosition
                             //alert(coordsX[molecule.LstAtoms.length*pos+i]);
                             var s=molecule.LstAtoms.length*pos+apuntador;
 
                             if(bndbuffer==0)
-                            {                   
-                                if (atom.Representation=='SB') 
+                            {
+                                if (atom.Representation=='SB')
                                 {
-                                    ////////////si el átomo está en SB                
-                                    for (var z=0; z<verArray.length;) 
-                                    {    
+                                    ////////////si el átomo está en SB
+                                    for (var z=0; z<verArray.length;)
+                                    {
                                     vertexPositionData[i].push(verArray[z]   + coordsX[s] -Cx);
                                     vertexPositionData[i].push(verArray[z+1] + coordsY[s] -Cy);
-                                    vertexPositionData[i].push(verArray[z+2] + coordsZ[s] -Cz);    
-                                                   
+                                    vertexPositionData[i].push(verArray[z+2] + coordsZ[s] -Cz);
+
                                     z=z+3;
-                                    }   
+                                    }
 
                                 }
                                 else if (atom.Representation=='CPK')
                                 {
-                                    ////////////si el átomo está en cpk                
-                                    for (var z=0; z<verArray.length;) 
-                                    {    
+                                    ////////////si el átomo está en cpk
+                                    for (var z=0; z<verArray.length;)
+                                    {
                                     vertexPositionData[i].push(verArrayH[z]   + coordsX[s] -Cx);
                                     vertexPositionData[i].push(verArrayH[z+1] + coordsY[s] -Cy);
-                                    vertexPositionData[i].push(verArrayH[z+2] + coordsZ[s] -Cz);    
-                                                   
+                                    vertexPositionData[i].push(verArrayH[z+2] + coordsZ[s] -Cz);
+
                                     z=z+3;
-                                    }  
-                                     
+                                    }
+
                                 }
                                 else
                                 {
-                                    
+
 
                                 }
-                           
+
                             }
                             else
                             {
                                 alert("coordsX1");
-                                for (var z=0; z<verArray.length;) 
-                                {    
+                                for (var z=0; z<verArray.length;)
+                                {
                                 vertexPositionData[i].push(verArray[z]   + coordsX1[s] -Cx);
                                 vertexPositionData[i].push(verArray[z+1] + coordsY1[s] -Cy);
-                                vertexPositionData[i].push(verArray[z+2] + coordsZ1[s] -Cz);  
-                                               
+                                vertexPositionData[i].push(verArray[z+2] + coordsZ1[s] -Cz);
+
                                 z=z+3;
-                                }      
-                                   
-                            }          
-                               
+                                }
+
+                            }
+
                                 apuntador=apuntador+1;
 
                                 //---------------------------------------------------------------------------------------------------------
-                            }                         
-                         
+                            }
+
                     }
                     else
                     {
-                        for (var j=0; j <NoPaso; j++) 
+                        for (var j=0; j <NoPaso; j++)
                         {
-                  
+
                             //la molecula tiene la lista de átomos en orden, entonces lo recorro con los i
                             var atom = molecule.LstAtoms[apuntador];
-                            
+
                             //lo unico que va a cambiar es el buffer de posiciones VertexPosition
                             //alert(coordsX[molecule.LstAtoms.length*pos+i]);
                             var s=molecule.LstAtoms.length*pos+apuntador;
 
                             if(bndbuffer==0)
-                            {                   
-                                if (atom.Representation=='SB') 
+                            {
+                                if (atom.Representation=='SB')
                                 {
-                                    ////////////si el átomo está en SB                
-                                    for (var z=0; z<verArray.length;) 
-                                    {    
+                                    ////////////si el átomo está en SB
+                                    for (var z=0; z<verArray.length;)
+                                    {
                                     vertexPositionData[i].push(verArray[z]   + coordsX[s] -Cx);
                                     vertexPositionData[i].push(verArray[z+1] + coordsY[s] -Cy);
-                                    vertexPositionData[i].push(verArray[z+2] + coordsZ[s] -Cz);    
-                                                   
+                                    vertexPositionData[i].push(verArray[z+2] + coordsZ[s] -Cz);
+
                                     z=z+3;
-                                    }   
+                                    }
 
                                 }
                                 else if (atom.Representation=='CPK')
                                 {
-                                    ////////////si el átomo está en cpk                
-                                    for (var z=0; z<verArray.length;) 
-                                    {    
+                                    ////////////si el átomo está en cpk
+                                    for (var z=0; z<verArray.length;)
+                                    {
                                     vertexPositionData[i].push(verArrayH[z]   + coordsX[s] -Cx);
                                     vertexPositionData[i].push(verArrayH[z+1] + coordsY[s] -Cy);
-                                    vertexPositionData[i].push(verArrayH[z+2] + coordsZ[s] -Cz);    
-                                                   
+                                    vertexPositionData[i].push(verArrayH[z+2] + coordsZ[s] -Cz);
+
                                     z=z+3;
-                                    }  
-                                     
+                                    }
+
                                 }
                                 else
                                 {
 
-                                    
+
                                 }
-                   
+
                             }
                             else
                             {
-                                for (var z=0; z<verArray.length;) 
-                                {    
+                                for (var z=0; z<verArray.length;)
+                                {
                                     vertexPositionData[i].push(verArray[z]   + coordsX1[s] -Cx);
                                     vertexPositionData[i].push(verArray[z+1] + coordsY1[s] -Cy);
-                                    vertexPositionData[i].push(verArray[z+2] + coordsZ1[s] -Cz);  
-                                                   
+                                    vertexPositionData[i].push(verArray[z+2] + coordsZ1[s] -Cz);
+
                                     z=z+3;
-                                }      
-                           
-                            }          
+                                }
+
+                            }
                             apuntador=apuntador+1;
 
                         //---------------------------------------------------------------------------------------------------
                         }
-                    
+
                     }
                 }
 
@@ -1350,9 +1395,9 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
             verticesLineas = [];
             for (var i=0; i<molecule.LstBonds.length;i++)
             {
-                var atm1 = molecule.LstBonds[i].LstAtoms[0]; 
+                var atm1 = molecule.LstBonds[i].LstAtoms[0];
                 var atm2 = molecule.LstBonds[i].LstAtoms[1];
-               
+
                 var temp1 = molecule.LstAtoms.length*pos;
                 var temp2 = molecule.LstAtoms.length*pos;
 
@@ -1360,10 +1405,10 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
                 //alert("Atm1:"+temp1 + atm1.NumberAtom);
                 //alert("Atm2:"+temp2 + atm2.NumberAtom);
 
-                if ( temp1 <= coordsX.length )  //ESTÁ DENTRO DEL BUFFER1       
+                if ( temp1 <= coordsX.length )  //ESTÁ DENTRO DEL BUFFER1
                 {
                     //alert(temp1);
-                    //alert(atm1.NumberAtom);                                                       
+                    //alert(atm1.NumberAtom);
                     //alert(parseInt(temp1) + parseInt(atm1.NumberAtom));
                     //alert(coordsX[parseInt(temp1) + parseInt(atm1.NumberAtom)]);
                     verticesLineas.push(coordsX[parseInt(temp1) + parseInt(atm1.id) -1] -Cx); /////////////////////////////77
@@ -1402,9 +1447,9 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
             verLineSkele = [];
             for (var i=0; i<molecule.LstBondsSkeleton.length;i++)
             {
-                var atm1 = molecule.LstBondsSkeleton[i].LstAtoms[0]; 
+                var atm1 = molecule.LstBondsSkeleton[i].LstAtoms[0];
                 var atm2 = molecule.LstBondsSkeleton[i].LstAtoms[1];
-               
+
                 var temp1 = molecule.LstAtoms.length*pos;
                 var temp2 = molecule.LstAtoms.length*pos;
 
@@ -1412,10 +1457,10 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
                 //alert("Atm1:"+temp1 + atm1.NumberAtom);
                 //alert("Atm2:"+temp2 + atm2.NumberAtom);
 
-                if ( temp1 <= coordsX.length )  //ESTÁ DENTRO DEL BUFFER1       
+                if ( temp1 <= coordsX.length )  //ESTÁ DENTRO DEL BUFFER1
                 {
                     //alert(temp1);
-                    //alert(atm1.NumberAtom);                                                       
+                    //alert(atm1.NumberAtom);
                     //alert(parseInt(temp1) + parseInt(atm1.NumberAtom));
                     //alert(coordsX[parseInt(temp1) + parseInt(atm1.NumberAtom)]);
                     verLineSkele.push(coordsX[parseInt(temp1) + parseInt(atm1.id) -1] -Cx); /////////////////////////////77
@@ -1447,14 +1492,20 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verLineSkele), gl.DYNAMIC_DRAW);
             lineSkeleVerPosBuf.itemSize = 3;
             lineSkeleVerPosBuf.numItems = verLineSkele.length/3;
-            gl.bindBuffer(gl.ARRAY_BUFFER, null);           
+            gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-         
+            if(OptRep==true)////---Julio
+            {
+              cleanMemory();
+              initBufferSpline();
+            }
+            //-----------Julio
+
             framecounter(numframe+1);
-       
- 
-            for(var i=0; i<NBSphe; i++) 
-            {              
+
+
+            for(var i=0; i<NBSphe; i++)
+            {
                     gl.bindBuffer(gl.ARRAY_BUFFER, sphereVertexPositionBuffer[i]);
                     gl.vertexAttribPointer(currentProgram.vertexPositionAttribute, sphereVertexPositionBuffer[i].itemSize, gl.FLOAT, false, 0, 0);
                     gl.bindBuffer(gl.ARRAY_BUFFER, null);
@@ -1470,18 +1521,18 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
                     gl.bindBuffer(gl.ARRAY_BUFFER, ChainBuffer[i]);
                     gl.vertexAttribPointer(currentProgram.Opcion, ChainBuffer[i].itemSize, gl.FLOAT, false, 0, 0);
                     gl.bindBuffer(gl.ARRAY_BUFFER, null);
-                    
-                   
+
+
                     gl.bindBuffer(gl.ARRAY_BUFFER, sphereVertexNormalBuffer[i]);
                     gl.vertexAttribPointer(currentProgram.vertexNormalAttribute, sphereVertexNormalBuffer[i].itemSize, gl.FLOAT, false, 0, 0);
                     gl.bindBuffer(gl.ARRAY_BUFFER, null);
                     setMatrixUniforms();
 
-                    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, sphereVertexIndexBuffer[i]);                    
+                    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, sphereVertexIndexBuffer[i]);
                     gl.drawElements(gl.TRIANGLES, sphereVertexIndexBuffer[i].numItems, gl.UNSIGNED_SHORT, 0);
-                    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null); 
-                    
-                   
+                    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+
+
             }
 
             //////PARTE DE LOS ENLACES
@@ -1502,9 +1553,9 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
             gl.vertexAttribPointer(currentProgram.Opcion, ChainBufferBnd.itemSize, gl.FLOAT, false, 0, 0);
             gl.bindBuffer(gl.ARRAY_BUFFER, null);
             setMatrixUniforms();
-                    
+
             gl.bindBuffer(gl.ARRAY_BUFFER, lineVertexPositionBuffer);
-            gl.vertexAttribPointer(currentProgram.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);            
+            gl.vertexAttribPointer(currentProgram.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
             gl.drawArrays(gl.LINES, 0, lineVertexPositionBuffer.numItems);
             gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
@@ -1516,7 +1567,7 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
                     gl.bindBuffer(gl.ARRAY_BUFFER, ColSkeleDifBuf);
                     gl.vertexAttribPointer(currentProgram.ColorDif, ColSkeleDifBuf.itemSize, gl.FLOAT, false, 0, 0);
                     gl.bindBuffer(gl.ARRAY_BUFFER, null);
-                    
+
                     gl.bindBuffer(gl.ARRAY_BUFFER, ChainSkeleBufBnd);
                     gl.vertexAttribPointer(currentProgram.Opcion, ChainSkeleBufBnd.itemSize, gl.FLOAT, false, 0, 0);
                     gl.bindBuffer(gl.ARRAY_BUFFER, null);
@@ -1525,28 +1576,29 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
                     gl.vertexAttribPointer(currentProgram.vertexNormalAttribute, 3, gl.FLOAT, false, 0, 0);
                     gl.bindBuffer(gl.ARRAY_BUFFER, null);
                     setMatrixUniforms();
-                    
+
                     gl.bindBuffer(gl.ARRAY_BUFFER, lineSkeleVerPosBuf);
-                    gl.vertexAttribPointer(currentProgram.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);                   
+                    gl.vertexAttribPointer(currentProgram.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
                     gl.drawArrays(gl.LINES, 0, lineSkeleVerPosBuf.numItems);
                     gl.bindBuffer(gl.ARRAY_BUFFER, null);
-                    
+
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-          
-            
+                if(OptRep==true)///-----Julio
+                  DrawSpline();
+
         }
 
     }
 
 
     function webGLStart() {
-        var canvas = document.getElementById("canvas"); 
+        var canvas = document.getElementById("canvas");
         canvas.width=window.innerWidth;
         canvas.height=window.innerHeight;
         initGL(canvas);
         initShaders();
         initPlantillaEsfera();
-        if (RepresentacionInicial=='SpheresBonds') 
+        if (RepresentacionInicial=='SpheresBonds')
         {
             InitBufSB();
         }
@@ -1556,7 +1608,7 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
         }
         else if(RepresentacionInicial=='CPK')
         {
-            InitBufCPK();   
+            InitBufCPK();
         }
         initBufDigit();
 
@@ -1619,13 +1671,13 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
         button.onclick=zoomout();
         data.appendChild( button );
         document.getElementById("Console_input").focus();
-        
+
         tick();
     }
 
 
 
-       
+
         var nav = navigator.userAgent.toLowerCase();
         if(nav.indexOf("msie") != -1){
         console.log("Estas visitandome desde IE");
@@ -1638,7 +1690,7 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
     } else {
         console.log("Desconosco el navegador del que me visitas");
     }
-      
+
 
     function manejadorEventoWorker1(event)
     {
@@ -1652,15 +1704,15 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
                 var anter1=sizearrayp;
                 sizearrayp+=event.data.dato.length;
                 datanter=coordsX;
-                coordsX = new Float32Array(sizearrayp); 
+                coordsX = new Float32Array(sizearrayp);
                 coordsX.set(datanter,0);
                 coordsX.set(event.data.dato,anter1);
                 datanter=coordsY;
-                coordsY = new Float32Array(sizearrayp); 
+                coordsY = new Float32Array(sizearrayp);
                 coordsY.set(datanter,0);
                 coordsY.set(event.data.dato1,anter1);
                 datanter=coordsZ;
-                coordsZ = new Float32Array(sizearrayp); 
+                coordsZ = new Float32Array(sizearrayp);
                 coordsZ.set(datanter,0);
                 coordsZ.set(event.data.dato2,anter1);
             }
@@ -1671,13 +1723,13 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
                 datanter=coordsX1;
                 coordsX1 = new Float32Array(sizearrayp);
                 coordsX1.set(datanter,0);
-                coordsX1.set(event.data.dato,anter1); 
+                coordsX1.set(event.data.dato,anter1);
                 datanter=coordsY1;
-                coordsY1 = new Float32Array(sizearrayp); 
+                coordsY1 = new Float32Array(sizearrayp);
                 coordsY1.set(datanter,0);
                 coordsY1.set(event.data.dato1,anter1);
                 datanter=coordsZ1;
-                coordsZ1 = new Float32Array(sizearrayp); 
+                coordsZ1 = new Float32Array(sizearrayp);
                 coordsZ1.set(datanter,0);
                 coordsZ1.set(event.data.dato2,anter1);
             }
@@ -1689,14 +1741,14 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
 	    }
         else
         {
-            requireddata=true;  
-            readstart=readend-event.data.wast; 
-            readend=readstart+mxSize; 
+            requireddata=true;
+            readstart=readend-event.data.wast;
+            readend=readstart+mxSize;
         }
 
     }
 
- 
+
     </script>
 </head>
 <body   onload="webGLStart();">
@@ -1710,18 +1762,18 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
                 <textarea id="Console_input" style="width:220px;height:80px;left:10px" onkeypress="main.onTestChange(event);"></textarea>
             </div>
         </div>
-<div id="Contenedor"> 
+<div id="Contenedor">
 
     <div id="WebGL-Out"  style="height:0px;"> <!-- not change value -->
-        
+
     </div>
     <div id='data'>
-        
+
     </div>
     <canvas id="canvas" > <!-- not change value -->
-    
+
     <div id='zoom'>
-        
+
     </div>
 
 </div>
@@ -1731,6 +1783,7 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
     var main= new Main();
     var container = document.getElementById("Contenedor");
     main.MakeMenu(container);
+    document.getElementById("Console_output").readOnly = true;// Julio/para solo lectura para datos de salida de la consola 
 </script>
-   
-</html> 
+
+</html>
