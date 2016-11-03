@@ -95,11 +95,15 @@
                       } else if (meta.natoms == true) {
                           if (new DataView(data).getInt32(0) == e.data.natoms) {
                               init = 1;
-                              xtc = true;
+                              xtc = true;   
+                              client.send("fpath", { fpath: fpath, reqsize: false, verif: false, start: readstart, end: readend });                       
                           } else if(new DataView(data).getInt32(0) == 1146244931 || new DataView(data).getInt32(0,1) == 1146244931 ) {
-                            dcd=true;
+                              dcd=true;
+                              client.send("fpath", { fpath: fpath, reqsize: false, verif: false, start: readstart, end: readend });
                           }
-                          client.send("fpath", { fpath: fpath, reqsize: false, verif: false, start: readstart, end: readend });
+                          else{
+                            throw new Error("Unrecognized/Damaged File or XTC:Number of Atoms on file are not equal (XTC:"+new DataView(data).getInt32(0)+"/Loaded Molecule:"+e.data.natoms+")");
+                          }
                       } else {
                           //    console.log(part.byteLength);
                           trans += data.byteLength;
@@ -108,7 +112,7 @@
                           tmp.set(new Uint8Array(part), 0);
                           tmp.set(new Uint8Array(data), part.byteLength);
                           part = tmp.buffer;
-                          if (xtc) {
+                          if (xtc==true) {
                               if (st == 1) {
                                   if (bndrev == true) {
                                       for (var i = 0; i < 5; i++) {
@@ -140,7 +144,7 @@
                   }
               });
               stream.on('end', function() {
-                  if (!xtc) {
+                  if (dcd==true) {
                     leer(part);
                     console.log("final");
                               bnd = true;
@@ -190,7 +194,7 @@
               }
               natoms = new DataView(buffer).getInt32(4);
               if (natoms != e.data.natoms) {
-                  throw Error("This file not is valid for this molecule");
+                  throw Error("XTC:Bad Format or Number of Atoms on file are not equal (XTC:"+natoms+"/Loaded Molecule:"+e.data.natoms+")");
                   stop = 1;
                   return -1;
               }
