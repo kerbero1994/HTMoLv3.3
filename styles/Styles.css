@@ -5,15 +5,19 @@ http://www.opensource.org/licenses/mit-license.php
 this file is part of HTMoL:
 Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Vega Ramirez Adan
 */
+
+/*Este pasrte del ccs es del menu anterior, esta todo modificado para no ser visto*/
+
+
 body{
 	font-family: Monospace;
 	background-color:white;
 	margin: 0px;
-	overflow: hidden;	
+	overflow: hidden;
 	padding:0px;
 	display: inline-block;
     vertical-align: top;
-    width: 100%;
+    width: 0;
 }
 div{
 	margin: 0;
@@ -22,9 +26,9 @@ div{
 
 #MainMenu{
 	position: absolute;
-}    
-textarea{	
-	width:50%;
+}
+textarea{
+	width:0%;
 	position:relative;
 	resize:none;
 }
@@ -54,44 +58,62 @@ input:active {
 }
 
 #menu{
-	top:10%;
+	top:45px;
 	float:right;
-	position:relative;
-	width: 20%;
-	text-align: right;
+	position:absolute;
+	width: 100%;
+	height: 0px;
+	text-align:right;
 	padding: 0;
 	margin: 0;
 
     }
 
-    #Menus{
-	width:100%; 
-	height:100%; 
-	background-color:transparent; 
+#MainMenu{
+	width:0%;
+	height:0%;
+	background-color:transparent;
 	float:right;
+
+}
+
+  #Menus{
+	width:0%;
+	height:0%;
+	background-color:transparent;
+	float:right;
+
     }
-    #zoom {
-    
-	position:relative;
+  #zoom {
+	position: absolute;
 	width: 100%;
+	height: 0;
 	text-align: right;
-	padding: 0;
-	margin: 0;	
+	padding: 2px;
+	margin: 0;
     }
-    
-    #data{
-	top:90%;
-	position:absolute;
-	width: 60%;
-	height:10%;
-	margin-left:1%;
-	color:white;
-	text-shadow: 1px 1px 0 black,
-                  -1px -1px black,
-                   1px -1px black,
-                  -1px 1px black,
-                   0 1px black,
-                   1px 0 black,
-                  -1px 0 black,
-                   0 -1px black;
+
+		#data{
+		display: inline;
+	 	top:95%;
+		left: 0%;
+	 	position:absolute;
+	 	width: 100%;
+	 	height:10px;
+	 	margin-left:1%;
+	 	color:white;
+	 	text-shadow: 1px 1px 0 black,
+	                   -1px -1px black,
+	                    1px -1px black,
+	                   -1px 1px black,
+	                    0 1px black,
+	                    1px 0 black,
+	                   -1px 0 black,
+	                    0 -1px black;
+	     }
+
+			 @media screen and (min-width: 500px) {
+    .Console {
+      top: 0px;
     }
+}

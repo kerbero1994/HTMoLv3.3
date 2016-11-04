@@ -109,7 +109,13 @@ function Main()
         {
           var op=LstAminoacid[i];
           var an = document.getElementById(op);
-          an.onclick=ByAmino(molecule,op);
+          try{
+            an.onclick=ByAmino(molecule,op);
+          }
+          catch(err) {
+                }
+
+
         }
 
         for(var i in LstViews)
@@ -119,12 +125,12 @@ function Main()
             an.onclick=SetView(molecule,op);
         }
 
-        for(var i=0; i< LstColors.length; i++)
+       /* for(var i=0; i< LstColors.length; i++)
         {
             var op=LstColors[i];
             var an = document.getElementById(op);
             an.onclick=ByColor(molecule,op);
-        }
+        }*/
 
         //para el centrado por átom
         var an = document.getElementById('Center');
@@ -141,7 +147,7 @@ function Main()
 
         an = document.getElementById('DeleteMeasures'); //para borrar las anteriores, también afecta el picking
         an.onclick=DeleteMeasures();
-        
+
 
     }
     this.CleanScene=function()
@@ -162,7 +168,7 @@ function Main()
         numframe=0;
         //////////////////////////
 
-        //para limpiar los dígitos 
+        //para limpiar los dígitos
 
 
         var newRotationMatrix = mat4.create();
@@ -381,113 +387,129 @@ function Main()
         }
     }
 
-   
+
     this.MakeMenu=function(container)
     {
+        var many = CAmino();//Esta en Buttons Function
         var hope="<link rel='stylesheet' type='text/css' href='styles/component.css' />"
                 +"<link rel='stylesheet' type='text/css' href='styles/Styles.css' />"
+                +"<link rel='stylesheet' type='text/css' href='styles/style.css' />"
                 +"  <div id='Menus'>"
-                +"  <div id='zoom'></div>"
+                +"  <div id='zoom'>"
                 +"  <div id='menu'></div>"
+                +"</div>"
                 +"  </div>"
-                +"  <div id='MainMenu'>"
-                +"      <div id='dl-menu' class='dl-menuwrapper'>"
-                +"      <button class='dl-trigger'>Open Menu</button>"
-                +"      <ul class='dl-menu'>"
-                +"      <li><a href='#'>Open</a>"
-                +"      <UL  id='Molecule' class='dl-submenu'></UL>"
-                +"          </li><li><a href='#'>Select</a>"
-                +"          <ul class='dl-submenu'>"
-                +"              <li><a href='#'>Aminoacid</a>"
-                +"         <ul id='sub-Amin' class='dl-submenu'>"
-                +"             <li><a href='#' id='ALA'>ALA</a></li>"
-                +"             <li><a href='#' id='ARG'>ARG</a></li>"
-                +"             <li><a href='#' id='ASN'>ASN</a></li>"
-                +"             <li><a href='#' id='ASP'>ASP</a></li>"
-                +"             <li><a href='#' id='CYS'>CYS</a></li>"
-                +"             <li><a href='#' id='GLN'>GLN</a></li>"
-                +"             <li><a href='#' id='GLU'>GLU</a></li>"
-                +"             <li><a href='#' id='GLY'>GLY</a></li>"
-                +"             <li><a href='#' id='HIS'>HIS</a></li>"
-                +"             <li><a href='#' id='ILE'>ILE</a></li>"
-                +"             <li><a href='#' id='LEU'>LEU</a></li>"
-                +"             <li><a href='#' id='LYS'>LYS</a></li>"
-                +"             <li><a href='#' id='MET'>MET</a></li>"
-                +"             <li><a href='#' id='PHE'>PHE</a></li>"
-                +"             <li><a href='#' id='PRO'>PRO</a></li>"
-                +"             <li><a href='#' id='SER'>SER</a></li>"
-                +"             <li><a href='#' id='THR'>THR</a></li>"
-                +"             <li><a href='#' id='TRP'>TRP</a></li>"
-                +"             <li><a href='#' id='TYR'>TYR</a></li>"
-                +"             <li><a href='#' id='VAL'>VAL</a></li>"
-                +"         </ul>"
-                +"     </li>"
-                +"     <li>"
-                +"     <a href='#'>Atom</a>"
-                +"     <ul id='sub-Atom' class='dl-submenu'>"
-                +"         <li><a href='#' id='C'>C</a></li>"
-                +"         <li><a href='#' id='H'>H</a></li>"
-                +"         <li><a href='#' id='O'>0</a></li>"
-                +"         <li><a href='#' id='PB'>PB</a></li>"
-                +"         <li><a href='#' id='TI'>TI</a></li>"
-                +"         <li><a href='#' id='N'>N</a></li>"
-                +"         <li><a href='#' id='S'>S</a></li>"
-                +"         <li><a href='#' id='P'>P</a></li>"
-                +"     </ul> </li> <li> <a href='#'>Color</a>"
-                +"     <ul id='sub-color'class='dl-submenu'>"
-                +"         <li><a href='#' id='yellow'>Yellow</a></li>"
-                +"         <li><a href='#' id='red'>Red</a></li>"
-                +"         <li><a href='#' id='orange'>Orange</a></li>"
-                +"         <li><a href='#' id='blue'>Blue</a></li>"
-                +"         <li><a href='#' id='bluesky'>Blue Sky</a></li>"
-                +"         <li><a href='#' id='green'>Green</a></li>"
-                +"         <li><a href='#' id='purple'>Purple</a></li>"
-                +"         <li><a href='#' id='pink'>Pink</a></li>"
-                +"         <li><a href='#' id='gray'>Gray</a></li>"
-                +"         <li><a href='#' id='brown'>Brown</a></li>"
-                +"         <li><a href='#' id='DefaultColor'>Default</a></li>"
-                +"     </ul> </li>"
-                +"     <li><a href='#' id='All'>All</a></li>"
-                +"     <li><a href='#' id='Show'>Show</a></li> </ul> </li>"
-                +"     <li><a href='#'>Actions</a>"
-                +"     <ul class='dl-submenu'>"
-                +"     <li><a href='#'>View</a>"
-                +"     <ul class='dl-submenu'>"
-                +"     <li><a href='#' id='F'>Front</a></li>"
-                +"     <li><a href='#' id='L'>Left</a></li>"
-                +"     <li><a href='#' id='R'>Right</a></li>"
-                +"     <li><a href='#' id='U'>Up</a></li>"
-                +"     <li><a href='#' id='D'>Down</a></li>"
-                +"     <li><a href='#' id='B'>Back</a></li> </ul> </li>"
-                +"     <li><a href='#'>Markers</a> <ul class='dl-submenu'>"
-                +"     <li><a href='#' id='ShowMarkers'>Show Markers</a></li>"
-                +"     <li><a href='#' id='HideMarkers'>Hide Markers</a></li>"
-                +"     <li><a href='#' id='DeleteMarkers'>Delete Markers</a></li>"
-                +"      </ul> </li> <li><a title='Atom Select' href='#'>A.Selected</a>"
-                +"      <ul class='dl-submenu'>"
-                +"      <li><a href='#' id='NameAtom'>Name Atom</a></li>"
-                +"      <li><a href='#' id='NumberAtom'>Number Atom</a></li>"
-                +"      <li><a href='#' id='DetailsAtom'>Details Atom</a></li>"
-                +"      <li><a href='#' id='Center'>Center Atom</a></li>"
-                +"      <li><a href='#' id='Identify'>Identify</a></li>"
-                +"      <li><a href='#' id='None1'>None</a></li> </ul> </li>"
-                +"      <li><a href='#'>Measures</a> <ul class='dl-submenu'>"
-                +"      <li><a href='#' id='Distance'>Distance</a></li>"
-                +"      <li><a href='#' id='Angle'>Angle</a></li>"
-                +"      <li><a href='#' id='None2'>None</a></li>"
-                +"      <li><a href='#' id='DeleteMeasures'>Delete Measures</a></li>"
-                +"      </ul> </li>"
-                +"      <li><a href='#'  title='Helix and Sheet' id='ViewHS'>H & S</a></li>"
-                +"      <li><a href='#' id='Axis'>Axis</a></li>"
-                +"      <li><a href='#' title='Molecule Center' id='MoleculeCenter'>M.Center</a></li>"
-                +"      </ul></li>"
-                +"      <li><a href='#'>Representations</a>"
-                +"      <ul class='dl-submenu'>"
-                +"      <li><a href='#' id='CPK'>CPK</a></li>"
-                +"      <li><a href='#' id='Bonds'>Bonds</a></li>"
-                +"      <li><a href='#' title='Spheres Bonds' id='Spheres Bonds'>S.Bonds</a></li>"
-                +"      <li><a href='#' id='Skeleton'>Skeleton</a></li>"
-                +"      <li><a href='#' id='Spline'>Spline</a></li> </ul> </li> </ul> </div></div>"
+
+                +"<div id='Master' class='Master'>"
+        +"<div id='Menu_Event'>"
+            +"<button onclick='toggleNavPanel()'><span class ='icon-menu' style='font-size:25px;'></span></button>"
+        +"</div>"
+        +"<div id='Menu_MenuPrincipal' class='menu_MenuPrincipal'>"
+            +"<div class='menu_iconos'>"
+                +"<button onclick='menu_open()' class='B_open' ><span class ='icon-carpeta-abierta' style='font-size:25px;'></span><span class='tooltip1'>Open</span> </button>"
+                                +"<br>"
+                +"<button onclick='menu_repre()' class='B_repre'><span class ='icon-molecula' style='font-size:25px;'></span><span class='tooltip2'>Representations</span></button>"
+                                +"<br>"
+                                +"<button onclick='menu_select()' class='B_select'><span class ='icon-seleccionar-objeto' style='font-size:25px;'><span class='tooltip3'>Select</span></span></button>"
+                                +"<br>"
+                +"<button onclick='menu_action()' class='B_action'><span class ='icon-ajustes' style='font-size:25px;'></span><span class='tooltip4'>Actions</span> </button>"
+                                +"<br>"
+                +"<button onclick='menu_view()' class='B_view' ><span class ='icon-orientacion' style='font-size:25px;'></span><span class='tooltip5'>View</span> </button>"
+            +"</div>"
+        +"</div>"
+
+        +"<div id='menu_open' class='menu_open' style='overflow:auto;'>"
+            +"<ul id='Molecule' class='menu'>"
+                +"<li><a href='#' onclick='menu_open_close()'><span class =' icon-boton-cancelar' style='font-size:18px;'></span></a></li>"
+
+                +"</ul>"
+        +"</div>"
+        +"<div id='menu_repre' class='menu_open' >"
+           +" <ul class='menu' id=M_R>"
+                +"<li><a href='#' onclick='close_all()'><span class =' icon-boton-cancelar' style='font-size:18px;'></span></a></li>"
+                +" <li><a href='#' id='CPK'>CPK</a></li>"
+               +" <li><a href='#'id='Bonds'>Bonds</a></li>"
+                +"<li><a href='#'title='Spheres Bonds' id='Spheres Bonds'>Spheres Bonds</a></li>"
+                +"<li><a href='#'id='Skeleton'>Skeleton</a></li>"
+                +"<li><a href='#'id='Spline'>Spline</a></li>"
+            +"</ul>"
+        +"</div>"
+        +"<div id='menu_select' class='menu_open' style='overflow:auto;'>"
+            +"<ul class='menu'>"
+                +"<li><a href='#' onclick='menu_open_close()'><span class =' icon-boton-cancelar' style='font-size:18px;'></a></li>"
+                +"<li><a href='#' id='#'>All</a></li>"
+                +"<li><a href='#'>Atom&#9662;</a>"
+                    +"<ul id ='Atom'>"
+                        +"<li><a href='#' id='C'>C</a></li>"
+                        +"<li><a href='#' id='H'>H</a></li>"
+                        +"<li><a href='#' id='O'>O</a></li>"
+                        +"<li><a href='#' id='PB'>PB</a></li>"
+                        +"<li><a href='#' id='TI'>TI</a></li>"
+                        +"<li><a href='#' id='N'>N</a></li>"
+                        +"<li><a href='#' id='S'>S</a></li>"
+                        +"<li><a href='#' id='P'>P</a></li>"
+                    +"</ul>"
+                +"</li>"
+                +"<li><a href='#'>Aminiacido&#9662;</a>"
+                    +"<ul>"
+                   +many
+                    +"</ul>"
+                +"</li>"
+            +"</ul>"
+        +"</div>"
+        +"<div id='menu_action' class='menu_open' style='overflow:auto;'>"
+            +"<ul class='menu'>"
+                +"<li><a href='#' onclick='close_all()'><span class =' icon-boton-cancelar' style='font-size:18px;'></span></a></li>"
+                    +"<li><a href='#'>Measures&#9662;</a>"
+                      +"<ul>"
+                      +"<li><a href='#' id='Distance'>Distance</a></li>"
+                        +"<li><a href='#' id='Angle'>Angle</a></li>"
+                          +"<li><a href='#' id='None2'>None</a></li>"
+                            +"  <li><a href='#' id='DeleteMeasures'>Delete</a></li>"
+                      +"</ul>"
+
+                +"<li><a href='#'>Markers&#9662;</a>"
+                   +" <ul>"
+                     +"   <li><a href='#' id='ShowMarkers'>Show Markers</a></li>"
+                       +" <li><a href='#' id='HideMarkers'>Hide Markers</a></li>"
+                        +"<li><a href='#' id='DeleteMarkers'>Delete Markers</a></li>"
+                    +"</ul>"
+                +"</li>"
+                +"<li><a href='#'>A.Selected&#9662;</a>"
+                    +"<ul>"
+                       +" <li><a href='#'id='Center'>Center Atom</a></li>"
+                       +" <li><a href='#' id='None1'>None</a></li>"
+                   +" </ul>"
+               +" </li>"
+                +"<li><a href='#'  title='Helix and Sheet' id='ViewHS'>H&S</a></li>"
+               +" <li><a href='#' id='Axis'>Axis</a></li>"
+              +" <li><a href='#' onclick='consola()'>Consola</a></li>"
+            +"</ul>"
+        +"</div>"
+
+       +" <div id='menu_view' class='menu_open' style='overflow:auto;'>"
+           +" <ul class='menu'>"
+           +"     <li><a href='#' onclick='close_all()'><span class =' icon-boton-cancelar' style='font-size:18px;'></span></a></li>"
+            +"    <li><a href='#' id='F'>Front</a></li>"
+            +"    <li><a href='#' id='L'>Left</a></li>"
+             +"   <li><a href='#' id='R'>Right</a></li>"
+             +"   <li><a href='#' id='U'>Up</a></li>"
+             +"   <li><a href='#' id='D'>Down</a></li>"
+              +"  <li><a href='#' id='B'>Back</a></li>"
+           +" </ul>"
++"</div>"
+  +"<div id='menu_medidas' class='menu_open' style='overflow:auto;'>"
+    +"<ul class>"
+      +"<li><a href='#' onclick='close_all()'><span class =' icon-boton-cancelar' style='font-size:18px;'></span></a></li>"
+        +"<li><a href='#' id='Distance'>Distance</a></li>"
+          +"<li><a href='#' id='Angle'>Angle</a></li>"
+            +"<li><a href='#' id='None2'>None</a></li>"
+              +"  <li><a href='#' id='DeleteMeasures'>Delete</a></li>"
+            +"</ul>"
+        +"</div>"
+    +"</div>"
+        +"  <div id='MainMenu'>"
+        +"</div>"
 
         document.getElementById('WebGL-Out').innerHTML = hope;
         var tagjs = document.createElement("script");

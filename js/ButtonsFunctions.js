@@ -1015,3 +1015,22 @@ function CambiarRepresentacion(Repre) //Representacion es en lo que se va a camb
 
 
 }
+function CAmino()
+{
+    var Amicad=[];
+
+  for (var i = 0; i < molecule.LstChain.length; i++) {
+      for (var j = 0; j < molecule.LstChain[i].LstAminoAcid.length; j++) {
+        Amicad.push(molecule.LstChain[i].LstAminoAcid[j].Name);
+      }
+  }
+    var Amicad1 = Amicad.filter(function(elem, pos) {
+    return Amicad.indexOf(elem) == pos;});
+      var many="";
+    for(var i = 0; i < Amicad1.length; i++)
+    {
+    //  var button = document.getElementById( "sub-Amin" );
+      many+='<li><a href="#" id='+Amicad1[i]+'>'+Amicad1[i]+'</a></li>';
+  }
+  return many;
+}

@@ -8,10 +8,29 @@
  *
  * Licensed under the MIT license.
  * http://www.opensource.org/licenses/mit-license.php
- * 
+ *
  * Copyright 2013, Codrops
  * http://www.codrops.com
  */
+ $(document).ready(function() {
+
+
+     $('.menu li:has(ul)').click(function(e) {
+
+         if ($(this).hasClass('select')) {
+             $(this).removeClass('select');
+             $(this).children('ul').slideUp();
+
+         } else {
+             $('.menu li').removeClass('select');
+             $('.menu li ul').slideUp();
+             $(this).addClass('select');
+             $(this).children('ul').slideDown();
+         }
+     });
+ });
+
+
 ;( function( $, window, undefined ) {
 
 	'use strict';
@@ -43,7 +62,7 @@
 			this.options = $.extend( true, {}, $.DLMenu.defaults, options );
 			// cache some elements and initialize some variables
 			this._config();
-			
+
 			var animEndEventNames = {
 					'WebkitAnimation' : 'webkitAnimationEnd',
 					'OAnimation' : 'oAnimationEnd',
@@ -81,10 +100,10 @@
 			var self = this;
 
 			this.$trigger.on( 'click.dlmenu', function() {
-				
+
 				if( self.open ) {
 					self._closeMenu();
-				} 
+				}
 				else {
 					self._openMenu();
 				}
@@ -93,7 +112,7 @@
 			} );
 
 			this.$menuitems.on( 'click.dlmenu', function( event ) {
-				
+
 				event.stopPropagation();
 
 				var $item = $(this),
@@ -131,7 +150,7 @@
 			} );
 
 			this.$back.on( 'click.dlmenu', function( event ) {
-				
+
 				var $this = $( this ),
 					$submenu = $this.parents( 'ul.dl-submenu:first' ),
 					$item = $submenu.parent(),
@@ -154,7 +173,7 @@
 					}
 
 					$item.removeClass( 'dl-subviewopen' );
-					
+
 					var $subview = $this.parents( '.dl-subview:first' );
 					if( $subview.is( 'li' ) ) {
 						$subview.addClass( 'dl-subviewopen' );
@@ -165,7 +184,7 @@
 				return false;
 
 			} );
-			
+
 		},
 		closeMenu : function() {
 			if( this.open ) {
@@ -178,11 +197,11 @@
 					self.$menu.off( self.transEndEventName );
 					self._resetMenu();
 				};
-			
+
 			this.$menu.removeClass( 'dl-menuopen' );
 			this.$menu.addClass( 'dl-menu-toggle' );
 			this.$trigger.removeClass( 'dl-active' );
-			
+
 			if( this.supportTransitions ) {
 				this.$menu.on( this.transEndEventName, onTransitionEndFn );
 			}
@@ -238,9 +257,9 @@
 				}
 				instance[ options ].apply( instance, args );
 			});
-		} 
+		}
 		else {
-			this.each(function() {	
+			this.each(function() {
 				var instance = $.data( this, 'dlmenu' );
 				if ( instance ) {
 					instance._init();

@@ -9,9 +9,9 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
     <title>HTMOL</title>
 
 
-    <script src="http://code.jquery.com/jquery-1.9.0.js"></script>
+
+    <script src="js/jquery.js"></script>
     <script src="js/TrackballControls.js"></script>
-    <script src="http://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
     <script src="js/Process.js"></script>
     <script src="js/Tools.js"></script>
     <script src="js/Support.js"></script>
@@ -21,7 +21,7 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
     <script src='js/camera.js'></script>
     <script src='js/InicializarRepre.js'></script>
     <script src='js/digitos.js'></script>
-
+    <script src='js/index.js'></script>
     <script src='js/Shaders.js'></script>
     <script src='js/plantilla_esfera.js'></script>
     <script src='js/Buffers.js'></script>
@@ -794,6 +794,7 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
             {
                 console.log("segunda parte");
                 var button=document.getElementById("playpause");
+                button.className = "icon-logo-de-youtube";
                 button.value="Play";
                 //agregado
                 autoplay=false;
@@ -1089,6 +1090,7 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
                 //alert(trjbnd);
                 autoplay=true;
                 button.value="Pause";
+                button.className = "icon-boton-de-pausa";
                 reg.style.display="none";
                 RegFrame=false;
 
@@ -1101,6 +1103,7 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
                 {
                     //alert("Pause");
                     button.value="Pause";
+                    button.className = "icon-boton-de-pausa";
                     reg.style.display="none";
                     forw.style.display="none";
                     RegFrame=false;
@@ -1110,6 +1113,7 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
                 {
                     //alert("Play");
                     button.value="Play";
+                    button.className = "icon-logo-de-youtube";
                     reg.style.display="inline";
                     forw.style.display="inline";
                     pos--;
@@ -1629,8 +1633,9 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
         var data=document.getElementById('zoom');
         var button;
 
-        button = document.createElement( 'input' );
-        button.value = 'Play';
+        button = document.createElement( 'button' );
+        button.value = '';
+        button.className = "icon-logo-de-youtube";
         button.type="button";
         button.style.fontSize = "15px";
         button.id="playpause";
@@ -1638,39 +1643,55 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
         button.onclick=PauseTraj();
         zoom.appendChild( button );
 
-        button = document.createElement( 'input' );
-        button.value = 'Rewind';
-        button.type="button";
-        button.style.fontSize = "15px";
-        button.id="Rew";
-        button.style.display="none"
-        button.onclick=RewFor(1);
-        zoom.appendChild( button );
+        button = document.createElement( 'button' );
+       button.value = '';
+       button.className = "icon-boton-de-pausa";
+       button.type="button";
+       button.style.fontSize = "15px";
+       button.id="playpause";
+       button.style.display="none"
+       button.onclick=PauseTraj();
+       zoom.appendChild( button );
 
-        button = document.createElement( 'input' );
-        button.value = 'Forward';
-        button.type="button";
-        button.style.fontSize = "15px";
-        button.id="Forw";
-        button.style.display="none"
-        button.onclick=RewFor(2);
-        zoom.appendChild( button );
+       button = document.createElement( 'button' );
+       button.value = 'retroceder';
+       button.className = "icon-paso-atras";
+       button.type="button";
+       button.style.fontSize = "15px";
+       button.id="Rew";
+       button.style.display="none"
+       button.onclick=RewFor(1);
+       zoom.appendChild( button );
+
+       button = document.createElement( 'button' );
+       button.value = '';
+       button.className = "icon-paso-de-avance";
+       button.type="button";
+       button.style.fontSize = "15px";
+       button.id="Forw";
+       button.style.display="none"
+       button.onclick=RewFor(2);
+       zoom.appendChild( button );
 
 
-        button = document.createElement( 'input' );
-        button.value = '+';
-        button.type="button";
-        button.style.fontSize = "15px";
-        button.onclick=zoomin();
-        data.appendChild( button );
+       button = document.createElement( 'button' );
+       button.value = '';
+       button.className = "icon-zoom";
+       button.id='mas';
+       button.type="button";
+       button.style.fontSize = "15px";
+       button.onclick=zoomin();
+       data.appendChild( button );
 
-        button = document.createElement( 'input' );
-        button.value = '-';
-        button.type="button";
-        button.style.fontSize = "15px";
-        button.onclick=zoomout();
-        data.appendChild( button );
-        document.getElementById("Console_input").focus();
+       button = document.createElement( 'button' );
+       button.value = '';
+       button.className = "icon-alejar";
+       button.id='menos';
+       button.type="button";
+       button.style.fontSize = "15px";
+       button.onclick=zoomout();
+       data.appendChild( button );
+       document.getElementById("Console_input").focus();
 
         tick();
     }
@@ -1747,7 +1768,19 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
         }
 
     }
+    function consola() {
+          var panel = document.getElementById("Console");
+          if (panel.style.opacity == 1) {
+            panel.style.opacity = 0;
+            panel.style.transfor.scaleY(0);
 
+    } else if (panel.style.opacity == 0) {
+            panel.style.opacity = 1;
+            panel.style.transfor.scaleY(1);
+
+          }
+
+    }
 
     </script>
 </head>
@@ -1783,7 +1816,7 @@ Copyright (C) 2014  Alvarez Rivera Leonardo,Becerra Toledo Francisco Javier, Veg
     var main= new Main();
     var container = document.getElementById("Contenedor");
     main.MakeMenu(container);
-    document.getElementById("Console_output").readOnly = true;// Julio/para solo lectura para datos de salida de la consola 
+    document.getElementById("Console_output").readOnly = true;// Julio/para solo lectura para datos de salida de la consola
 </script>
 
 </html>
