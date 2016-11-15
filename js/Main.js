@@ -59,7 +59,7 @@ function Main()
     //--------------------------
     molecule=this.ObjP.ReadFile(pdbInicial);
     createBonds(this);
-    initCamera();
+    initCamera(CzPers);
 
     //---------------------------
 
@@ -194,7 +194,7 @@ function Main()
         molecule=main.ObjP.ReadFile(url);
 
         createBonds(main);
-        initCamera();
+        initCamera(CzPers);
         if (RepresentacionInicial=='SpheresBonds')
         {
             InitBufSB();
@@ -213,7 +213,7 @@ function Main()
        if(molecule!=null)
        {
            data.innerHTML="Loading...";
-
+           window.setTimeout(function(){
            if(main.ObjP.Model.Frames!=0 && main.ObjP.Model.Frames!="")
            {
            main.filerequest();
@@ -224,6 +224,7 @@ function Main()
            DinamicaActiva=true;
             }
            data.innerHTML="";
+       },100);
        }
        else{
         data.innerHTML='Error: Invalid URL or Connection not available';
@@ -232,42 +233,23 @@ function Main()
 
     this.Parse=function(txt)
     {
-        /*
-        elementos separados por coma  o un guión
 
-        aquí entra el texto para el cuál se realiza el análisis
-        space   =
-        ;       =
-        -       =
-        enter   = 13
+        var comando=txt.substr(0, txt.indexOf(" ")).toLowerCase();//obtengo la primer palabra que es un comando
 
-        Puedo hacer un array por cada palabra separada por un space ,  ;
-
-
-        obtener la primer palabra que va a ser el comando a usar
-
-        var firstWords = [];
-        for (var i=0;i<codelines.length;i++)
-        {
-          var codeLine = codelines[i];
-          var firstWord = codeLine.substr(0, codeLine.indexOf(" "));
-          firstWords.push(firstWord);
-        }
-
-        */
-        var comando=txt.substr(0, txt.indexOf(" "));//obtengo la primer palabra que es un comando
-        //luego voy a obtener todo lo demás
+        //luego voy a obtener todo lo demás que va a ser la instrucción
         var lines=txt.split(" ");
         var inst=txt.replace(comando + ' ','');
 
-        if (comando=='select')
-        {
+
+        if (comando == 'select') {
+            EliminarSeleccion();
+
             //alert("comando select");
             //obtener todo lo demás antes del ;
             //alert(inst);
             //alert(inst.length);
             var numAtoms=0;
-            var regex = /(\d+)/g;
+            //var regex = /(\d+)/g;
             //alert(inst.match(regex));
             //alert(AtomosSeleccionados.length);
 
@@ -277,7 +259,600 @@ function Main()
             }
             else
             {
-                script=inst.match(regex);
+                //script=inst.match(regex);
+                var arrComa = inst.split(",");
+
+                //alert(arrComa.length);
+                var allselect=false;
+
+                for(var i=0; i<arrComa.length; i++)
+                {
+                    var  ele=arrComa[i];
+
+                    var n=ele.indexOf("-");
+                    var m=ele.indexOf(":")
+                    if (n>(-1)) //quiere decir que es un rango ejemplo 34-38
+                    {
+                        //alert("rango");
+                        var arr2=ele.split("-");
+                        var rng1 = parseInt(arr2[0]);
+                        var rng2 = parseInt(arr2[1]);
+                        if (!isNaN(rng1) && !isNaN(rng2))
+                        {
+                            //alert("los dos son numeros");
+                            if (rng1>0 && rng1 <= molecule.LstAtoms.length  && rng2>0 && rng2 <= molecule.LstAtoms.length)
+                            {
+                                if (rng2 < rng1)
+                                {
+                                    for(var j=rng2; j<=rng1; j++)
+                                    {
+                                        AtomosSeleccionados.push(molecule.LstAtoms[j - 1]);
+                                    }
+                                }
+                                else
+                                {
+                                    for(var j=rng1; j<=rng2; j++)
+                                    {
+                                        AtomosSeleccionados.push(molecule.LstAtoms[j - 1]);
+                                    }
+                                }
+
+                            }
+
+                        }
+
+                    }
+                    else if(m>(-1)) //quiere decir que es un grupo ejemplo 0:45:A
+                    {
+                        var arr3=ele.split(":");
+                        if (arr3.length==3) //quiere decir que sì tiene bien las tres partes
+                        {
+                            //0:2:1
+                            //N:6:2
+                            //Voy a poner todos los casos
+                            if (arr3[0]==0) //todos los àtomos del aminoàciodo
+                            {
+                                if (arr3[1]==0)  //todos los aminoácidos
+                                {
+                                    if (arr3[2]==0) //todos los átomos de la molécula
+                                    {
+                                        allselect=true;
+                                    }
+                                    else //todos los atomos de una cadena
+                                    {
+                                        //primero checar si es un numero la cadena, entonces sera por index
+                                        if (!isNaN(arr3[2])) //es un indice
+                                        {
+                                            if (arr3[2]>0 && arr3[2]<=molecule.LstChain.length) //entonces esta en el rango
+                                            {
+                                                var cha=molecule.LstChain[arr3[2]-1];
+                                                for(var j=0; j<cha.LstAminoacid.length;j++)
+                                                {
+                                                    var amin=cha.LstAminoacid[j];
+                                                    for(var z=0; z<amin.LstAtoms.length;z++)
+                                                    {
+                                                        AtomosSeleccionados.push(amin.LstAtoms[z]);
+                                                    }
+                                                }
+
+                                            }
+                                            else
+                                            {
+                                                //la cadena no esta dentro del indice
+                                            }
+                                        }
+                                        else //si no la cadena es por nombre
+                                        {
+                                            //tengo que buscarlo por la letra
+                                            for(var j=0;j<molecule.LstChain.length; j++)
+                                            {
+                                                if (arr3[2]==molecule.LstChain[j].Name.replace(" ", "") )
+                                                {
+                                                    //procesalo y salte del for
+                                                    var cha=molecule.LstChain[j];
+                                                    for(var k=0; k<cha.LstAminoAcid.length;k++)
+                                                    {
+                                                        var amin=cha.LstAminoAcid[k];
+                                                        for(var z=0; z<amin.LstAtoms.length;z++)
+                                                        {
+                                                            AtomosSeleccionados.push(amin.LstAtoms[z]);
+                                                        }
+                                                    }
+                                                    break;  //checar si esta bien esta instruccion
+                                                }
+
+                                            }
+
+                                        }
+
+                                    }
+
+                                }
+                                else //en esta parte quiere decir que sí se ha especificado el aminoácido
+                                {    //en esta parte el aminoácido
+                                    if (!isNaN(arr3[1])) //el aminoácido es un índice pero hay que buscarlo
+                                    {
+                                        if (arr3[2]==0) //de todas las cadenas
+                                        {
+                                            //para buscar el aminoacido en todas las cadenas
+                                            for(var k=0; k<molecule.LstChain.length; k++)
+                                            {
+                                                var caden = molecule.LstChain[k];
+                                                for(var t=0; t< caden.LstAminoAcid.length;  t++)
+                                                {
+                                                    var amin = caden.LstAminoAcid[t];
+                                                    //alert("length:"+amin.Number.replace(" ", "").length)
+                                                    //alert("length:"+arr3[1].replace(" ", "").length)
+                                                    if (parseInt(arr3[1]) == parseInt(amin.Number))
+                                                    {
+                                                        for(var v=0; v<amin.LstAtoms.length; v++)
+                                                        {
+                                                            AtomosSeleccionados.push(amin.LstAtoms[v]);
+                                                        }
+                                                        break; //quiere decir que lo encontré en esa cadena
+
+                                                    }
+                                                }
+
+                                            }
+
+                                        }
+                                        else //de una cadena  la cadena puede ser por indice o por letra
+                                        {
+                                            if (!isNaN(arr3[2])) //es un indice
+                                            {
+                                                //los indices en la cadena son como aparecen en la lista
+                                                if (arr3[2]>0 && arr3[2] <=  molecule.LstChain.length) //para saber que si esta en el rango
+                                                {
+                                                    var cha = molecule.LstChain[arr3[2]-1]; //ya encontre la cadena
+                                                    //ahora busco en todos los aminoacidos de esta cadena
+                                                    for(var t=0; t< cha.LstAminoAcid.length;  t++)
+                                                    {
+                                                        var amin = cha.LstAminoAcid[t];
+                                                        //alert("length:"+amin.Number.replace(" ", "").length)
+                                                        //alert("length:"+arr3[1].replace(" ", "").length)
+                                                        if (parseInt(arr3[1]) == parseInt(amin.Number))
+                                                        {
+                                                            for(var v=0; v<amin.LstAtoms.length; v++)
+                                                            {
+                                                                AtomosSeleccionados.push(amin.LstAtoms[v]);
+                                                            }
+                                                            break; //quiere decir que lo encontré en esa cadena
+
+                                                        }
+                                                    }
+
+                                                }
+                                            }
+                                            else //la cadena es por letra
+                                            {
+                                                //tengo que buscarlo por la letra
+                                                for(var j=0;j<molecule.LstChain.length; j++)
+                                                {
+                                                    if (arr3[2]==molecule.LstChain[j].Name.replace(" ", "") )
+                                                    {
+                                                        //procesalo y salte del for
+                                                        var cha=molecule.LstChain[j];
+                                                        //ahora busco en todos los aminoacidos de esta cadena
+                                                        for(var t=0; t < cha.LstAminoAcid.length;  t++)
+                                                        {
+                                                            var amin = cha.LstAminoAcid[t];
+                                                            //alert("length:"+amin.Number.replace(" ", "").length)
+                                                            //alert("length:"+arr3[1].replace(" ", "").length)
+                                                            if (parseInt(arr3[1]) == parseInt(amin.Number))
+                                                            {
+                                                                for(var v=0; v<amin.LstAtoms.length; v++)
+                                                                {
+                                                                    AtomosSeleccionados.push(amin.LstAtoms[v]);
+                                                                }
+                                                                break; //quiere decir que lo encontré en esa cadena
+
+                                                            }
+                                                        }
+                                                    }
+
+                                                }
+
+                                            }
+
+                                        }
+                                    }
+                                    else //el aminoácido es por letra, hay que buscarlo, Las letras se pueden repetir dentro de una cadena
+                                    {
+                                        //hay dos opciones todos los aminoacidos que tengan este nombre en una cadena
+                                        //todos los aminoacidos que tengan este nombre en todas las cadenas
+                                        if (arr3[2]==0) //de todas las cadenas
+                                        {
+                                            //para buscar el aminoacido en todas las cadenas
+                                            for(var k=0; k<molecule.LstChain.length; k++)
+                                            {
+                                                var caden = molecule.LstChain[k];
+                                                for(var t=0; t< caden.LstAminoAcid.length;  t++)
+                                                {
+                                                    var amin = caden.LstAminoAcid[t];
+                                                    //alert("length:"+amin.Number.replace(" ", "").length)
+                                                    //alert("length:"+arr3[1].replace(" ", "").length)
+                                                    if ( arr3[1].replace(" ", "") == amin.Name.replace(" ", "")) //
+                                                    {
+                                                        for(var v=0; v<amin.LstAtoms.length; v++)
+                                                        {
+                                                            AtomosSeleccionados.push(amin.LstAtoms[v]);
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                        }
+                                        else
+                                        {
+                                            //de una cadena, la cadena puede estar dada por un indice o por una letra
+                                            if (!isNaN(arr3[2])) //es un indice
+                                            {
+                                                //los indices en la cadena son como aparecen en la lista
+                                                if (arr3[2]>0 && arr3[2] <=  molecule.LstChain.length) //para saber que si esta en el rango
+                                                {
+                                                    var cha = molecule.LstChain[arr3[2]-1]; //ya encontre la cadena
+                                                    //ahora busco en todos los aminoacidos de esta cadena
+                                                    for(var t=0; t< cha.LstAminoAcid.length;  t++)
+                                                    {
+                                                        var amin = cha.LstAminoAcid[t];
+                                                        //alert("length:"+amin.Number.replace(" ", "").length)
+                                                        //alert("length:"+arr3[1].replace(" ", "").length)
+                                                        if ( arr3[1].replace(" ", "") == amin.Name.replace(" ", "")) //
+                                                        {
+                                                            for(var v=0; v<amin.LstAtoms.length; v++)
+                                                            {
+                                                                AtomosSeleccionados.push(amin.LstAtoms[v]);
+                                                            }
+                                                        }
+                                                    }
+
+                                                }
+
+                                            }
+                                            else  //la cadena es una letra
+                                            {
+                                                //tengo que buscarla por la letra
+                                                for(var j=0;j<molecule.LstChain.length; j++)
+                                                {
+                                                    if (arr3[2]==molecule.LstChain[j].Name.replace(" ", "") )
+                                                    {
+                                                        //procesalo y salte del for
+                                                        var cha=molecule.LstChain[j];
+                                                        //ahora busco en todos los aminoacidos de esta cadena
+                                                        for(var t=0; t< cha.LstAminoAcid.length;  t++)
+                                                        {
+                                                            var amin = cha.LstAminoAcid[t];
+                                                            //alert("length:"+amin.Number.replace(" ", "").length)
+                                                            //alert("length:"+arr3[1].replace(" ", "").length)
+                                                            if ( arr3[1].replace(" ", "") == amin.Name.replace(" ", "")) //
+                                                            {
+                                                                for(var v=0; v<amin.LstAtoms.length; v++)
+                                                                {
+                                                                    AtomosSeleccionados.push(amin.LstAtoms[v]);
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                                }
+
+
+                                            }
+
+                                        }
+
+                                    }
+
+                                }
+                            }
+                            else  ////////////////por elemento
+                            {
+                                //buscar el elemento
+                                if (arr3[1]==0)  //en todos los aminoácidos
+                                {
+                                    if (arr3[2]==0) //en todas las cadenas
+                                    {
+                                        for (var j = 0; j < molecule.LstAtoms.length; j++)
+                                        {
+                                            if (arr3[0] == molecule.LstAtoms[j].Element) {
+                                                if (molecule.LstAtoms[j].State == 'Active') { //checar lo de Active
+                                                    AtomosSeleccionados.push(molecule.LstAtoms[j]);
+                                                }
+
+                                            }
+                                        }
+                                    }
+                                    else //todos los aminoacidos de una cadena
+                                    {
+                                        //la cadena puede estar dada por un indice o por una letra
+                                        if (!isNaN(arr3[2])) //es un indice
+                                        {
+                                            //los indices en la cadena son como aparecen en la lista
+                                                if (arr3[2]>0 && arr3[2] <=  molecule.LstChain.length) //para saber que si esta en el rango
+                                                {
+                                                    var cha = molecule.LstChain[arr3[2]-1]; //ya encontre la cadena
+                                                    for(var t=0; t< cha.LstAminoAcid.length;  t++)
+                                                    {
+                                                        var amin = cha.LstAminoAcid[t];
+                                                        for(var v=0; v<amin.LstAtoms.length; v++)
+                                                        {
+                                                            if (arr3[0].replace(" ", "") == amin.LstAtoms[v].Element.replace(" ", ""))
+                                                            {
+                                                                if (amin.LstAtoms[v].State == 'Active')
+                                                                {
+                                                                    AtomosSeleccionados.push(amin.LstAtoms[v]);
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                                }
+                                        }
+                                        else //la cadena está dada por una letra, primero la tengo que buscar
+                                        {
+                                             //tengo que buscarla por la letra
+                                                for(var j=0;j<molecule.LstChain.length; j++)
+                                                {
+                                                    if (arr3[2]==molecule.LstChain[j].Name.replace(" ", "") )
+                                                    {
+                                                        //procesalo y salte del for
+                                                        var cha=molecule.LstChain[j];
+                                                        //ahora busco en todos los aminoacidos de esta cadena
+                                                        for(var t=0; t< cha.LstAminoAcid.length;  t++)
+                                                        {
+                                                            var amin = cha.LstAminoAcid[t];
+                                                            for(var v=0; v<amin.LstAtoms.length; v++)
+                                                            {
+                                                                if (arr3[0].replace(" ", "") == amin.LstAtoms[v].Element.replace(" ", ""))
+                                                                {
+                                                                    if (amin.LstAtoms[v].State == 'Active')
+                                                                    {
+                                                                        AtomosSeleccionados.push(amin.LstAtoms[v]);
+                                                                    }
+                                                                }
+                                                            }
+
+                                                        }
+                                                    }
+
+                                                }
+
+                                        }
+
+
+                                    }
+
+                                }
+                                else //en esta parte quiere decir que sí se ha especificado el aminoácido
+                                {    //en esta parte el aminoácido
+                                    if (!isNaN(arr3[1])) //el aminoácido es un índice pero hay que buscarlo
+                                    {
+                                        if (arr3[2]==0) //de todas las cadenas
+                                        {
+                                            //para buscar el aminoacido en todas las cadenas
+                                            for(var k=0; k<molecule.LstChain.length; k++)
+                                            {
+                                                var caden = molecule.LstChain[k];
+                                                for(var t=0; t< caden.LstAminoAcid.length;  t++)
+                                                {
+                                                    var amin = caden.LstAminoAcid[t];
+                                                    //alert("length:"+amin.Number.replace(" ", "").length)
+                                                    //alert("length:"+arr3[1].replace(" ", "").length)
+                                                    if (parseInt(arr3[1]) == parseInt(amin.Number))
+                                                    {
+                                                        for(var v=0; v<amin.LstAtoms.length; v++)
+                                                        {
+                                                            if (arr3[0].replace(" ", "") == amin.LstAtoms[v].Element.replace(" ", ""))
+                                                            {
+                                                                if (amin.LstAtoms[v].State == 'Active')
+                                                                {
+                                                                    AtomosSeleccionados.push(amin.LstAtoms[v]);
+                                                                }
+                                                            }
+                                                        }
+                                                        break; //quiere decir que encontré el aminoácido en esa cadena
+
+                                                    }
+                                                }
+
+                                            }
+
+                                        }
+                                        else //de una cadena  la cadena puede ser por indice o por letra
+                                        {
+                                            if (!isNaN(arr3[2])) //es un indice
+                                            {
+                                                //los indices en la cadena son como aparecen en la lista
+                                                if (arr3[2]>0 && arr3[2] <=  molecule.LstChain.length) //para saber que si esta en el rango
+                                                {
+                                                    var cha = molecule.LstChain[arr3[2]-1]; //ya encontre la cadena
+                                                    //ahora busco en todos los aminoacidos de esta cadena
+                                                    for(var t=0; t< cha.LstAminoAcid.length;  t++)
+                                                    {
+                                                        var amin = cha.LstAminoAcid[t];
+                                                        //alert("length:"+amin.Number.replace(" ", "").length)
+                                                        //alert("length:"+arr3[1].replace(" ", "").length)
+                                                        if (parseInt(arr3[1]) == parseInt(amin.Number))
+                                                        {
+                                                            for(var v=0; v<amin.LstAtoms.length; v++)
+                                                            {
+                                                                if (arr3[0].replace(" ", "") == amin.LstAtoms[v].Element.replace(" ", ""))
+                                                                {
+                                                                    if (amin.LstAtoms[v].State == 'Active')
+                                                                    {
+                                                                        AtomosSeleccionados.push(amin.LstAtoms[v]);
+                                                                    }
+                                                                }
+                                                            }
+                                                            break; //quiere decir que lo encontré en esa cadena
+
+                                                        }
+                                                    }
+
+                                                }
+                                            }
+                                            else //la cadena es por letra
+                                            {
+                                                //tengo que buscarlo por la letra
+                                                for(var j=0;j<molecule.LstChain.length; j++)
+                                                {
+                                                    if (arr3[2]==molecule.LstChain[j].Name.replace(" ", "") )
+                                                    {
+                                                        //procesalo y salte del for
+                                                        var cha=molecule.LstChain[j];
+                                                        //ahora busco en todos los aminoacidos de esta cadena
+                                                        for(var t=0; t < cha.LstAminoAcid.length;  t++)
+                                                        {
+                                                            var amin = cha.LstAminoAcid[t];
+                                                            //alert("length:"+amin.Number.replace(" ", "").length)
+                                                            //alert("length:"+arr3[1].replace(" ", "").length)
+                                                            if (parseInt(arr3[1]) == parseInt(amin.Number))
+                                                            {
+                                                                for(var v=0; v<amin.LstAtoms.length; v++)
+                                                                {
+                                                                    if (arr3[0].replace(" ", "") == amin.LstAtoms[v].Element.replace(" ", ""))
+                                                                    {
+                                                                        if (amin.LstAtoms[v].State == 'Active')
+                                                                        {
+                                                                            AtomosSeleccionados.push(amin.LstAtoms[v]);
+                                                                        }
+                                                                    }
+                                                                }
+                                                                break; //quiere decir que lo encontré en esa cadena
+
+                                                            }
+                                                        }
+                                                    }
+
+                                                }
+
+                                            }
+
+                                        }
+
+
+                                    }
+                                    else //el aminoácido es por letra, hay que buscarlo
+                                    {
+                                        //hay dos opciones todos los aminoacidos que tengan este nombre en una cadena
+                                        //todos los aminoacidos que tengan este nombre en todas las cadenas
+                                        if (arr3[2]==0) //de todas las cadenas
+                                        {
+                                            //para buscar el aminoacido en todas las cadenas
+                                            for(var k=0; k<molecule.LstChain.length; k++)
+                                            {
+                                                var caden = molecule.LstChain[k];
+                                                for(var t=0; t< caden.LstAminoAcid.length;  t++)
+                                                {
+                                                    var amin = caden.LstAminoAcid[t];
+                                                    //alert("length:"+amin.Number.replace(" ", "").length)
+                                                    //alert("length:"+arr3[1].replace(" ", "").length)
+                                                    if ( arr3[1].replace(" ", "") == amin.Name.replace(" ", "")) //
+                                                    {
+                                                        for(var v=0; v<amin.LstAtoms.length; v++)
+                                                        {
+                                                            if (arr3[0].replace(" ", "") == amin.LstAtoms[v].Element.replace(" ", ""))
+                                                            {
+                                                                if (amin.LstAtoms[v].State == 'Active')
+                                                                {
+                                                                    AtomosSeleccionados.push(amin.LstAtoms[v]);
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                        }
+                                        else
+                                        {
+                                            //de una cadena, la cadena puede estar dada por un indice o por una letra
+                                            if (!isNaN(arr3[2])) //es un indice
+                                            {
+                                                //los indices en la cadena son como aparecen en la lista
+                                                if (arr3[2]>0 && arr3[2] <=  molecule.LstChain.length) //para saber que si esta en el rango
+                                                {
+                                                    var cha = molecule.LstChain[arr3[2]-1]; //ya encontre la cadena
+                                                    //ahora busco en todos los aminoacidos de esta cadena
+                                                    for(var t=0; t< cha.LstAminoAcid.length;  t++)
+                                                    {
+                                                        var amin = cha.LstAminoAcid[t];
+                                                        //alert("length:"+amin.Number.replace(" ", "").length)
+                                                        //alert("length:"+arr3[1].replace(" ", "").length)
+                                                        if ( arr3[1].replace(" ", "") == amin.Name.replace(" ", "")) //
+                                                        {
+                                                            for(var v=0; v<amin.LstAtoms.length; v++)
+                                                            {
+                                                                if (arr3[0].replace(" ", "") == amin.LstAtoms[v].Element.replace(" ", ""))
+                                                                {
+                                                                    if (amin.LstAtoms[v].State == 'Active')
+                                                                    {
+                                                                        AtomosSeleccionados.push(amin.LstAtoms[v]);
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                                }
+
+                                            }
+                                            else  //la cadena es una letra
+                                            {
+                                                //tengo que buscarla por la letra
+                                                for(var j=0;j<molecule.LstChain.length; j++)
+                                                {
+                                                    if (arr3[2]==molecule.LstChain[j].Name.replace(" ", "") )
+                                                    {
+                                                        //procesalo y salte del for
+                                                        var cha=molecule.LstChain[j];
+                                                        //ahora busco en todos los aminoacidos de esta cadena
+                                                        for(var t=0; t< cha.LstAminoAcid.length;  t++)
+                                                        {
+                                                            var amin = cha.LstAminoAcid[t];
+                                                            //alert("length:"+amin.Number.replace(" ", "").length)
+                                                            //alert("length:"+arr3[1].replace(" ", "").length)
+                                                            if ( arr3[1].replace(" ", "") == amin.Name.replace(" ", "")) //
+                                                            {
+                                                                for(var v=0; v<amin.LstAtoms.length; v++)
+                                                                {
+                                                                    if (arr3[0].replace(" ", "") == amin.LstAtoms[v].Element.replace(" ", ""))
+                                                                    {
+                                                                        if (amin.LstAtoms[v].State == 'Active')
+                                                                        {
+                                                                            AtomosSeleccionados.push(amin.LstAtoms[v]);
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                                }
+
+
+                                            }
+
+                                        }
+
+                                    }
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+                    else //quiere decir que es un index ejemplo 45
+                    {
+                        AtomosSeleccionados.push(molecule.LstAtoms[ele-1]);
+                    }
+
+                }
+
+                /*
                 for(var o in script)
                 {
                     if(o==0)
@@ -289,6 +864,11 @@ function Main()
                          AtomosSeleccionados=AtomosSeleccionados.concat(molecule.LstChain[0].LstAminoAcid[script[o]-1].GetAtoms());
                     }
                 }
+                */
+                if (allselect==true)
+                {
+                    AtomosSeleccionados=molecule.LstAtoms;
+                }
                 ProcesarSeleccion();
             }
 
@@ -298,23 +878,14 @@ function Main()
         else if (comando=='color')
         {
             //alert("comando color");
-            var color=inst;
-            for(var o in AtomosSeleccionados) //son los objetos seleccionados
-            {
-                /*
-                var ato=AtomosSeleccionados[o];
-
-
-                ato.Color=LstColors[inst].color;
-                //alert(ato.Color);
-                ato.Mesh.material.color.setHex(ato.Color);
-                */
-            }
+            var color=inst.toLowerCase();
+            CambiarColor(color);
 
         }
         else if (comando=='show')
         {
-            if (inst=='sequence') //para el show sequence
+            instLower=inst.toLowerCase();
+            if (instLower=='sequence') //para el show sequence
             {
                 var sqnc='';
                 for(var o in molecule.LstChain) //son los objetos seleccionados  main.oRepresentation.molecule
@@ -337,25 +908,21 @@ function Main()
                 }
                 document.getElementById("Console_output").value=sqnc;
             }
-            else if(inst=='cpk') //para mostrar el cpk
+            else if(instLower=='cpk') //para mostrar el cpk
             {
-                main.oRepresentation.repre='CPK';
-                main.oRepresentation.Make(main.o3D);
+                CambiarRepresentacion('CPK');
             }
-            else if(inst=='sb') //para mostrar el cpk
+            else if(instLower=='spherebond') //para mostrar en spheres bonds
             {
-                main.oRepresentation.repre='SB';
-                main.oRepresentation.Make(main.o3D);
+                CambiarRepresentacion('SB');
             }
-            else if(inst=='bonds') //para mostrar el cpk
+            else if(instLower=='bond') //para mostrar el cpk
             {
-                main.oRepresentation.repre='Bonds';
-                main.oRepresentation.Make(main.o3D);
+                CambiarRepresentacion('Bonds');
             }
-            else if(inst=='skeleton') //para mostrar el cpk
+            else if(instLower=='backbone') //para mostrar el cpk
             {
-                main.oRepresentation.repre='Skeleton';
-                main.oRepresentation.Make(main.o3D);
+                CambiarRepresentacion('Skeleton');
             }
             else
             {
@@ -377,7 +944,7 @@ function Main()
         // If the user has pressed enter
         if (key == 13) {
             event.preventDefault(); //esta línea es para que no se imprima una nueva línea con el enter
-            main.Parse(document.getElementById("Console_input").value.toLowerCase());
+            main.Parse(document.getElementById("Console_input").value);
             document.getElementById("Console_input").value='';
             //document.getElementById("Console_input").value =document.getElementById("Console_input").value + "\n*";
             return false;
@@ -387,14 +954,23 @@ function Main()
         }
     }
 
-
+var menuStyle="";
+    var mediaquery = window.matchMedia("(max-width: 700px)");
+      if (mediaquery.matches) {
+        menuStyle+='<link rel="stylesheet" type="text/css" href="styles/style_tiny.css" />'
+        maxTam = "150px";
+      } else {
+        menuStyle+='<link rel="stylesheet" type="text/css" href="styles/style.css" />'
+        maxTam = "250px";
+      }
     this.MakeMenu=function(container)
     {
         var many = CAmino();//Esta en Buttons Function
         var hope="<link rel='stylesheet' type='text/css' href='styles/component.css' />"
                 +"<link rel='stylesheet' type='text/css' href='styles/Styles.css' />"
-                +"<link rel='stylesheet' type='text/css' href='styles/style.css' />"
+                +menuStyle
                 +"  <div id='Menus'>"
+                +"<div id='controles'></div>"
                 +"  <div id='zoom'>"
                 +"  <div id='menu'></div>"
                 +"</div>"
@@ -402,19 +978,19 @@ function Main()
 
                 +"<div id='Master' class='Master'>"
         +"<div id='Menu_Event'>"
-            +"<button onclick='toggleNavPanel()'><span class ='icon-menu' style='font-size:25px;'></span></button>"
+            +"<button onclick='toggleNavPanel()'><span class ='icon-menu' id='aprima'></span></button>"
         +"</div>"
         +"<div id='Menu_MenuPrincipal' class='menu_MenuPrincipal'>"
             +"<div class='menu_iconos'>"
-                +"<button onclick='menu_open()' class='B_open' ><span class ='icon-carpeta-abierta' style='font-size:25px;'></span><span class='tooltip1'>Open</span> </button>"
+                +"<button onclick='menu_open()' class='B_open' ><span class ='icon-carpeta-abierta'  id='a1'></span><span class='tooltip1'>Open</span> </button>"
                                 +"<br>"
-                +"<button onclick='menu_repre()' class='B_repre'><span class ='icon-molecula' style='font-size:25px;'></span><span class='tooltip2'>Representations</span></button>"
+                +"<button onclick='menu_repre()' class='B_repre'><span class ='icon-molecula'  id='a2'></span><span class='tooltip2'>Model</span></button>"
                                 +"<br>"
-                                +"<button onclick='menu_select()' class='B_select'><span class ='icon-seleccionar-objeto' style='font-size:25px;'><span class='tooltip3'>Select</span></span></button>"
+                                +"<button onclick='menu_select()' class='B_select'><span class ='icon-seleccionar-objeto'  id='a3'><span class='tooltip3'>Select</span></span></button>"
                                 +"<br>"
-                +"<button onclick='menu_action()' class='B_action'><span class ='icon-ajustes' style='font-size:25px;'></span><span class='tooltip4'>Actions</span> </button>"
+                +"<button onclick='menu_action()' class='B_action'><span class ='icon-ajustes'  id='a4'></span><span class='tooltip4'>Actions</span> </button>"
                                 +"<br>"
-                +"<button onclick='menu_view()' class='B_view' ><span class ='icon-orientacion' style='font-size:25px;'></span><span class='tooltip5'>View</span> </button>"
+                +"<button onclick='menu_view()' class='B_view' ><span class ='icon-orientacion' id='a5'></span><span class='tooltip5'>View</span> </button>"
             +"</div>"
         +"</div>"
 
